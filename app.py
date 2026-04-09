@@ -1,40 +1,124 @@
-from flask import Flask, request
-import requests
 import os
+import json
+import threading
+import requests
+from flask import Flask, request
 
 app = Flask(__name__)
 
 TOKEN = "8742729664:AAHKmoy1S2mSOuYM06DQJMW651EAi32FFHs"
 URL = f"https://api.telegram.org/bot8742729664:AAHKmoy1S2mSOuYM06DQJMW651EAi32FFHs"
 
-user_states = {}
-user_stats = {}
+DATA_FILE = "data.json"
+DATA_LOCK = threading.Lock()
+
+# =========================
+# Хранилище
+# =========================
+
+def default_stats():
+    return {
+        "решимость": 0,
+        "восприятие": 0,
+        "Стив": 0,
+        "Рей": 0,
+        "контроль": 0,
+        "замечена": 0,
+        "сомнение": 0,
+        "зависимость": 0,
+        "внимание": 0,
+    }
 
 
-def init_user(chat_id):
-    if chat_id not in user_states:
-        user_states[chat_id] = "S1"
-    if chat_id not in user_stats:
-        user_stats[chat_id] = {
-            "решимость": 0,
-            "восприятие": 0,
-            "Стив": 0,
-            "Рей": 0,
-            "контроль": 0,
-            "замечена": 0,
-            "сомнение": 0,
-            "зависимость": 0,
-            "внимание": 0,
+def load_data():
+    if not os.path.exists(DATA_FILE):
+        return {"users": {}, "subscribers": []}
+
+    try:
+        with open(DATA_FILE, "r", encoding="utf-8") as f:
+            data = json.load(f)
+    except Exception:
+        return {"users": {}, "subscribers": []}
+
+    if "users" not in data:
+        data["users"] = {}
+    if "subscribers" not in data:
+        data["subscribers"] = []
+
+    return data
+
+
+DATA = load_data()
+
+
+def save_data():
+    with DATA_LOCK:
+        with open(DATA_FILE, "w", encoding="utf-8") as f:
+            json.dump(DATA, f, ensure_ascii=False, indent=2)
+
+
+def get_user(chat_id):
+    chat_id = str(chat_id)
+
+    if chat_id not in DATA["users"]:
+        DATA["users"][chat_id] = {
+            "scene": "S1",
+            "stats": default_stats()
         }
+        save_data()
+
+    user = DATA["users"][chat_id]
+
+    if "scene" not in user:
+        user["scene"] = "S1"
+    if "stats" not in user:
+        user["stats"] = default_stats()
+
+    # добиваем недостающие поля, если код обновлялся
+    for k, v in default_stats().items():
+        if k not in user["stats"]:
+            user["stats"][k] = v
+
+    return user
+
+
+def reset_user(chat_id):
+    chat_id = str(chat_id)
+    DATA["users"][chat_id] = {
+        "scene": "S1",
+        "stats": default_stats()
+    }
+    save_data()
+    return DATA["users"][chat_id]
 
 
 def apply_stats(chat_id, changes):
-    init_user(chat_id)
+    user = get_user(chat_id)
     for stat_name, value in changes.items():
-        if stat_name not in user_stats[chat_id]:
-            user_stats[chat_id][stat_name] = 0
-        user_stats[chat_id][stat_name] += value
+        if stat_name not in user["stats"]:
+            user["stats"][stat_name] = 0
+        user["stats"][stat_name] += value
+    save_data()
 
+
+def set_scene(chat_id, scene):
+    user = get_user(chat_id)
+    user["scene"] = scene
+    save_data()
+
+
+def subscribe_user(chat_id):
+    chat_id = str(chat_id)
+    if chat_id not in DATA["subscribers"]:
+        DATA["subscribers"].append(chat_id)
+        save_data()
+        return True
+    return False
+
+
+# =========================
+# Telegram helpers
+# =========================
 
 def set_main_keyboard(buttons):
     return {
@@ -44,7 +128,7 @@ def set_main_keyboard(buttons):
     }
 
 
-def split_text_for_telegram(text, limit=3500):
+def split_text_for_telegram(text, limit=4096):
     if len(text) <= limit:
         return [text]
 
@@ -80,8 +164,9 @@ def split_text_for_telegram(text, limit=3500):
     return parts
 
 
-def send_message(chat_id, text, reply_markup=None):
-    parts = split_text_for_telegram(text)
+def send_text(chat_id, text, buttons=None):
+    reply_markup = set_main_keyboard(buttons) if buttons else None
+    parts = split_text_for_telegram(text, limit=4096)
 
     for i, part in enumerate(parts):
         data = {
@@ -94,14 +179,37 @@ def send_message(chat_id, text, reply_markup=None):
         requests.post(
             f"{URL}/sendMessage",
             json=data,
-            timeout=15
+            timeout=20
         )
 
 
+def send_image(chat_id, filename):
+    path = os.path.join("images", filename)
+    if not os.path.exists(path):
+        return
+
+    with open(path, "rb") as photo:
+        requests.post(
+            f"{URL}/sendPhoto",
+            data={"chat_id": chat_id},
+            files={"photo": photo},
+            timeout=30
+        )
+
+
+def send_story(chat_id, scene_key, text, buttons, image=None):
+    set_scene(chat_id, scene_key)
+    if image:
+        send_image(chat_id, image)
+    send_text(chat_id, text, buttons)
+
+
+# =========================
+# Тексты
+# =========================
+
 def get_s1_text():
-    return """# S1 — Ты уже здесь
- 
-Ты просыпаешься резко.
+    return """Ты просыпаешься резко.
  
 Как будто тебя выдернули из чего-то.
  
@@ -352,10 +460,26 @@ def get_s2_intro_promolchat():
 — Пока не станет поздно."""
 
 
-def get_s2_common_text():
-    return """# S2 — Они знают
+def get_s2_intro_ignore():
+    return """Ты отворачиваешься.
  
-Он откидывается на спинку сиденья, не отводя от тебя взгляда.
+Как будто его тут вообще нет.
+ 
+…
+ 
+Он чуть усмехается.
+ 
+— Ну да.
+ 
+Можно и так.
+ 
+Пауза.
+ 
+— Только это ничего не отменяет."""
+
+
+def get_s2_common_text():
+    return """Он откидывается на спинку сиденья, не отводя от тебя взгляда.
  
 — Ты ещё не поняла.
  
@@ -593,9 +717,7 @@ def get_s3_intro_ignor():
 
 
 def get_s3_common_text():
-    return """# S3 — Ближе, чем кажется
- 
-И поэтому не сразу понимаешь, что звук поезда изменился.
+    return """И поэтому не сразу понимаешь, что звук поезда изменился.
  
 Сначала — почти незаметно.
  
@@ -779,9 +901,7 @@ def get_s4_intro_kivnut():
 
 
 def get_s4_main_text():
-    return """# S4 — Не двигайся
- 
-Слова Рея повисают в воздухе.
+    return """Слова Рея повисают в воздухе.
  
 — Сейчас будет проверка.
  
@@ -971,14 +1091,12 @@ def get_s5_intro_otshatnutsya():
 
 
 def get_s5_common_text():
-    return """# S5 — После
- 
-Свет возвращается резко.
+    return """Свет возвращается резко.
  
 Слишком резко.
  
 Как будто кто-то просто щёлкнул выключателем.
-
+ 
 Вагон снова выглядит обычным.
  
 Сиденья.
@@ -1199,9 +1317,7 @@ def get_s6a_intro_from_doubt():
 
 
 def get_s6a_common_text():
-    return """# S6A — Следующий вагон
- 
-Дверь за спиной закрывается.
+    return """Дверь за спиной закрывается.
  
 Чуть громче, чем раньше.
  
@@ -1279,9 +1395,7 @@ def get_s6a_common_text():
 
 
 def get_s6b_text():
-    return """# S6B — Остаться
- 
-Ты не двигаешься.
+    return """Ты не двигаешься.
  
 Секунда.
  
@@ -1467,9 +1581,7 @@ def get_s7_intro_osmotretsya():
 
 
 def get_s7_common_text():
-    return """# S7 — Они здесь
- 
-Сначала ты не понимаешь, что изменилось.
+    return """Сначала ты не понимаешь, что изменилось.
  
 Свет.
  
@@ -1687,11 +1799,9 @@ def get_s7_common_text():
  
 Будто ты идёшь не через вагон —
  
-а через что-то, что наблюдает за тобой. 
+а через что-то, что наблюдает за тобой.
  
-Ты чувствуешь, что ещё немного — и что-то изменится.
- 
-И тебе нужно решить:"""
+Ты чувствуешь, что ещё немного — и что-то изменится."""
 
 
 def get_s8_intro_ignore():
@@ -1877,9 +1987,7 @@ def get_s8_intro_vzyat_za_ruku():
 
 
 def get_s8_common_text():
-    return """# S8 — Не выделяйся
- 
-Ты делаешь шаг.
+    return """Ты делаешь шаг.
  
 …
  
@@ -2145,9 +2253,7 @@ def get_s9_intro_help():
 
 
 def get_s9_common_text():
-    return """# S9 — Почти
- 
-Ритм остаётся.
+    return """Ритм остаётся.
  
 Шаг.
  
@@ -2354,10 +2460,11 @@ def get_s10_intro_look_back():
 И ты слушаешься."""
 
 
-def get_s10_common_text():
-    return """# S10 — Почти вышла
- 
-Проход заканчивается.
+def get_s10_common_text(chat_id):
+    user = get_user(chat_id)
+    stats = user["stats"]
+
+    return f"""Проход заканчивается.
  
 Не резко.
  
@@ -2498,357 +2605,455 @@ def get_s10_common_text():
 ты точно знаешь:
  
 это не осталось в вагоне.
- 
-## Переход:
- 
- 
-- S11 Следующая серия."""
 
+…
+
+Решимость: {stats['решимость']}
+Контроль: {stats['контроль']}
+Восприятие: {stats['восприятие']}
+Стив: {stats['Стив']}
+Рей: {stats['Рей']}"""
+
+
+def get_s11_text():
+    return """Ты делаешь вдох.
+ 
+Но ощущение не уходит.
+ 
+Оно не осталось в вагоне.
+ 
+Оно пошло за тобой.
+ 
+…
+ 
+История не закончена.
+ 
+Следующая серия уже готовится.
+ 
+Она появится здесь совсем скоро. 🔻"""
+
+
+# =========================
+# Отправка сцен
+# =========================
 
 def send_s1(chat_id):
-    keyboard = set_main_keyboard([
-        "Кто ты такой?",
-        "что происходит?",
-        "Промолчать",
-        "Игнорировать"
-    ])
-    send_message(chat_id, get_s1_text(), reply_markup=keyboard)
-    user_states[chat_id] = "S1"
+    send_story(
+        chat_id,
+        "S1",
+        get_s1_text(),
+        [
+            "❓ Кто ты такой?",
+            "❓ Что происходит?",
+            "😶 Промолчать",
+            "🚫 Игнорировать"
+        ],
+        image="s1.jpg"
+    )
 
 
 def send_s2_from_kto(chat_id):
-    send_message(chat_id, get_s2_intro_kto_ty_takoy())
-    keyboard = set_main_keyboard([
-        "О чем вы?",
-        "Осмотреться",
-        "Игнор"
-    ])
-    send_message(chat_id, get_s2_common_text(), reply_markup=keyboard)
-    user_states[chat_id] = "S2"
+    text = get_s2_intro_kto_ty_takoy() + "\n\n" + get_s2_common_text()
+    send_story(
+        chat_id,
+        "S2",
+        text,
+        ["❓ О чем вы?", "👁 Осмотреться", "🚫 Игнорировать"],
+        image="s2.jpg"
+    )
 
 
 def send_s2_from_chto(chat_id):
-    send_message(chat_id, get_s2_intro_chto_proiskhodit())
-    keyboard = set_main_keyboard([
-        "О чем вы?",
-        "Осмотреться",
-        "Игнор"
-    ])
-    send_message(chat_id, get_s2_common_text(), reply_markup=keyboard)
-    user_states[chat_id] = "S2"
+    text = get_s2_intro_chto_proiskhodit() + "\n\n" + get_s2_common_text()
+    send_story(
+        chat_id,
+        "S2",
+        text,
+        ["❓ О чем вы?", "👁 Осмотреться", "🚫 Игнорировать"],
+        image="s2.jpg"
+    )
 
 
 def send_s2_from_promolchat(chat_id):
-    send_message(chat_id, get_s2_intro_promolchat())
-    keyboard = set_main_keyboard([
-        "О чем вы?",
-        "Осмотреться",
-        "Игнор"
-    ])
-    send_message(chat_id, get_s2_common_text(), reply_markup=keyboard)
-    user_states[chat_id] = "S2"
+    text = get_s2_intro_promolchat() + "\n\n" + get_s2_common_text()
+    send_story(
+        chat_id,
+        "S2",
+        text,
+        ["❓ О чем вы?", "👁 Осмотреться", "🚫 Игнорировать"],
+        image="s2.jpg"
+    )
 
 
 def send_s2_from_ignore(chat_id):
-    keyboard = set_main_keyboard([
-        "О чем вы?",
-        "Осмотреться",
-        "Игнор"
-    ])
-    send_message(chat_id, get_s2_common_text(), reply_markup=keyboard)
-    user_states[chat_id] = "S2"
+    text = get_s2_intro_ignore() + "\n\n" + get_s2_common_text()
+    send_story(
+        chat_id,
+        "S2",
+        text,
+        ["❓ О чем вы?", "👁 Осмотреться", "🚫 Игнорировать"],
+        image="s2.jpg"
+    )
 
 
 def send_s3_from_o_chem_vy(chat_id):
-    send_message(chat_id, get_s3_intro_o_chem_vy())
-    keyboard = set_main_keyboard([
-        "О чем вы?",
-        "Не буду слушать",
-        "Кивнуть"
-    ])
-    send_message(chat_id, get_s3_common_text(), reply_markup=keyboard)
-    user_states[chat_id] = "S3"
+    text = get_s3_intro_o_chem_vy() + "\n\n" + get_s3_common_text()
+    send_story(
+        chat_id,
+        "S3",
+        text,
+        ["❓ О чем вы?", "🚫 Не буду слушать", "✔ Кивнуть"],
+        image="s3.jpg"
+    )
 
 
 def send_s3_from_osmotretsya(chat_id):
-    send_message(chat_id, get_s3_intro_osmotretsya())
-    keyboard = set_main_keyboard([
-        "О чем вы?",
-        "Не буду слушать",
-        "Кивнуть"
-    ])
-    send_message(chat_id, get_s3_common_text(), reply_markup=keyboard)
-    user_states[chat_id] = "S3"
+    text = get_s3_intro_osmotretsya() + "\n\n" + get_s3_common_text()
+    send_story(
+        chat_id,
+        "S3",
+        text,
+        ["❓ О чем вы?", "🚫 Не буду слушать", "✔ Кивнуть"],
+        image="s3.jpg"
+    )
 
 
 def send_s3_from_ignor(chat_id):
-    send_message(chat_id, get_s3_intro_ignor())
-    keyboard = set_main_keyboard([
-        "О чем вы?",
-        "Не буду слушать",
-        "Кивнуть"
-    ])
-    send_message(chat_id, get_s3_common_text(), reply_markup=keyboard)
-    user_states[chat_id] = "S3"
+    text = get_s3_intro_ignor() + "\n\n" + get_s3_common_text()
+    send_story(
+        chat_id,
+        "S3",
+        text,
+        ["❓ О чем вы?", "🚫 Не буду слушать", "✔ Кивнуть"],
+        image="s3.jpg"
+    )
 
 
 def send_s4_from_o_chem_vy(chat_id):
-    send_message(chat_id, get_s4_intro_o_chem_vy())
-    keyboard = set_main_keyboard([
-        "Замереть",
-        "Открыть глаза",
-        "Отшатнуться"
-    ])
-    send_message(chat_id, get_s4_main_text(), reply_markup=keyboard)
-    user_states[chat_id] = "S4"
+    text = get_s4_intro_o_chem_vy() + "\n\n" + get_s4_main_text()
+    send_story(
+        chat_id,
+        "S4",
+        text,
+        ["🧊 Замереть", "👁 Открыть глаза", "↩ Отшатнуться"],
+        image="s4.jpg"
+    )
 
 
 def send_s4_from_ne_budu_slushat(chat_id):
-    send_message(chat_id, get_s4_intro_ne_budu_slushat())
-    keyboard = set_main_keyboard([
-        "Замереть",
-        "Открыть глаза",
-        "Отшатнуться"
-    ])
-    send_message(chat_id, get_s4_main_text(), reply_markup=keyboard)
-    user_states[chat_id] = "S4"
+    text = get_s4_intro_ne_budu_slushat() + "\n\n" + get_s4_main_text()
+    send_story(
+        chat_id,
+        "S4",
+        text,
+        ["🧊 Замереть", "👁 Открыть глаза", "↩ Отшатнуться"],
+        image="s4.jpg"
+    )
 
 
 def send_s4_from_kivnut(chat_id):
-    send_message(chat_id, get_s4_intro_kivnut())
-    keyboard = set_main_keyboard([
-        "Замереть",
-        "Открыть глаза",
-        "Отшатнуться"
-    ])
-    send_message(chat_id, get_s4_main_text(), reply_markup=keyboard)
-    user_states[chat_id] = "S4"
+    text = get_s4_intro_kivnut() + "\n\n" + get_s4_main_text()
+    send_story(
+        chat_id,
+        "S4",
+        text,
+        ["🧊 Замереть", "👁 Открыть глаза", "↩ Отшатнуться"],
+        image="s4.jpg"
+    )
 
 
 def send_s5_from_zameret(chat_id):
-    send_message(chat_id, get_s5_intro_zameret())
-    keyboard = set_main_keyboard([
-        "Пойти дальше",
-        "Остаться"
-    ])
-    send_message(chat_id, get_s5_common_text(), reply_markup=keyboard)
-    user_states[chat_id] = "S5"
+    text = get_s5_intro_zameret() + "\n\n" + get_s5_common_text()
+    send_story(
+        chat_id,
+        "S5",
+        text,
+        ["➡ Пойти дальше", "⏸ Остаться"],
+        image="s5.jpg"
+    )
 
 
 def send_s5_from_otkryt_glaza(chat_id):
-    send_message(chat_id, get_s5_intro_otkryt_glaza())
-    keyboard = set_main_keyboard([
-        "Пойти дальше",
-        "Остаться"
-    ])
-    send_message(chat_id, get_s5_common_text(), reply_markup=keyboard)
-    user_states[chat_id] = "S5"
+    text = get_s5_intro_otkryt_glaza() + "\n\n" + get_s5_common_text()
+    send_story(
+        chat_id,
+        "S5",
+        text,
+        ["➡ Пойти дальше", "⏸ Остаться"],
+        image="s5.jpg"
+    )
 
 
 def send_s5_from_otshatnutsya(chat_id):
-    send_message(chat_id, get_s5_intro_otshatnutsya())
-    keyboard = set_main_keyboard([
-        "Пойти дальше",
-        "Остаться"
-    ])
-    send_message(chat_id, get_s5_common_text(), reply_markup=keyboard)
-    user_states[chat_id] = "S5"
+    text = get_s5_intro_otshatnutsya() + "\n\n" + get_s5_common_text()
+    send_story(
+        chat_id,
+        "S5",
+        text,
+        ["➡ Пойти дальше", "⏸ Остаться"],
+        image="s5.jpg"
+    )
 
 
 def send_s6a_from_go(chat_id):
-    send_message(chat_id, get_s6a_intro_from_go())
-    keyboard = set_main_keyboard([
-        "Спросить Рея",
-        "Спросить Стива",
-        "Осмотреться"
-    ])
-    send_message(chat_id, get_s6a_common_text(), reply_markup=keyboard)
-    user_states[chat_id] = "S6A"
+    text = get_s6a_intro_from_go() + "\n\n" + get_s6a_common_text()
+    send_story(
+        chat_id,
+        "S6A",
+        text,
+        ["❓ Спросить Рея", "😏 Спросить Стива", "👁 Осмотреться"],
+        image="s6a.jpg"
+    )
 
 
 def send_s6a_from_doubt(chat_id):
-    send_message(chat_id, get_s6a_intro_from_doubt())
-    keyboard = set_main_keyboard([
-        "Спросить Рея",
-        "Спросить Стива",
-        "Осмотреться"
-    ])
-    send_message(chat_id, get_s6a_common_text(), reply_markup=keyboard)
-    user_states[chat_id] = "S6A"
+    text = get_s6a_intro_from_doubt() + "\n\n" + get_s6a_common_text()
+    send_story(
+        chat_id,
+        "S6A",
+        text,
+        ["❓ Спросить Рея", "😏 Спросить Стива", "👁 Осмотреться"],
+        image="s6a.jpg"
+    )
 
 
 def send_s6b(chat_id):
-    keyboard = set_main_keyboard([
-        "Пойти дальше",
-        "Остаться"
-    ])
-    send_message(chat_id, get_s6b_text(), reply_markup=keyboard)
-    user_states[chat_id] = "S6B"
+    send_story(
+        chat_id,
+        "S6B",
+        get_s6b_text(),
+        ["➡ Всё же пойти", "⏸ Остаться"],
+        image="s6b.jpg"
+    )
 
 
 def send_s6b_final(chat_id):
-    send_message(chat_id, get_s6b_final_text())
-    send_message(chat_id, "Ранний финал.")
-    user_states[chat_id] = "FINAL_EARLY"
+    send_story(
+        chat_id,
+        "FINAL_EARLY",
+        get_s6b_final_text(),
+        ["🔁 Начать заново"],
+        image="s6end.jpg"
+    )
 
 
 def send_s7_from_rey(chat_id):
-    send_message(chat_id, get_s7_intro_sprosit_reya())
-    keyboard = set_main_keyboard([
-        "Игнорировать их",
-        "Спросить Рея",
-        "Спросить Стива",
-        "Рассмотреть их",
-        "Взять кого-то за руку"
-    ])
-    send_message(chat_id, get_s7_common_text(), reply_markup=keyboard)
-    user_states[chat_id] = "S7"
+    text = get_s7_intro_sprosit_reya() + "\n\n" + get_s7_common_text()
+    send_story(
+        chat_id,
+        "S7",
+        text,
+        [
+            "🚶 Игнорировать их",
+            "❓ Спросить Рея",
+            "😏 Спросить Стива",
+            "👁 Рассмотреть их",
+            "🤝 Взять кого-то за руку"
+        ],
+        image="s7.jpg"
+    )
 
 
 def send_s7_from_stiv(chat_id):
-    send_message(chat_id, get_s7_intro_sprosit_stiva())
-    keyboard = set_main_keyboard([
-        "Игнорировать их",
-        "Спросить Рея",
-        "Спросить Стива",
-        "Рассмотреть их",
-        "Взять кого-то за руку"
-    ])
-    send_message(chat_id, get_s7_common_text(), reply_markup=keyboard)
-    user_states[chat_id] = "S7"
+    text = get_s7_intro_sprosit_stiva() + "\n\n" + get_s7_common_text()
+    send_story(
+        chat_id,
+        "S7",
+        text,
+        [
+            "🚶 Игнорировать их",
+            "❓ Спросить Рея",
+            "😏 Спросить Стива",
+            "👁 Рассмотреть их",
+            "🤝 Взять кого-то за руку"
+        ],
+        image="s7.jpg"
+    )
 
 
 def send_s7_from_osmotretsya(chat_id):
-    send_message(chat_id, get_s7_intro_osmotretsya())
-    keyboard = set_main_keyboard([
-        "Игнорировать их",
-        "Спросить Рея",
-        "Спросить Стива",
-        "Рассмотреть их",
-        "Взять кого-то за руку"
-    ])
-    send_message(chat_id, get_s7_common_text(), reply_markup=keyboard)
-    user_states[chat_id] = "S7"
+    text = get_s7_intro_osmotretsya() + "\n\n" + get_s7_common_text()
+    send_story(
+        chat_id,
+        "S7",
+        text,
+        [
+            "🚶 Игнорировать их",
+            "❓ Спросить Рея",
+            "😏 Спросить Стива",
+            "👁 Рассмотреть их",
+            "🤝 Взять кого-то за руку"
+        ],
+        image="s7.jpg"
+    )
 
 
 def send_s8_from_ignore(chat_id):
-    send_message(chat_id, get_s8_intro_ignore())
-    keyboard = set_main_keyboard([
-        "Не реагировать и идти дальше",
-        "Коротко ответить мужчине",
-        "Отдёрнуть руку",
-        "Попытаться помочь"
-    ])
-    send_message(chat_id, get_s8_common_text(), reply_markup=keyboard)
-    user_states[chat_id] = "S8"
+    text = get_s8_intro_ignore() + "\n\n" + get_s8_common_text()
+    send_story(
+        chat_id,
+        "S8",
+        text,
+        [
+            "🚶 Не реагировать и идти дальше",
+            "💬 Коротко ответить мужчине",
+            "✋ Отдёрнуть руку",
+            "🫴 Попытаться помочь"
+        ],
+        image="s8.jpg"
+    )
 
 
 def send_s8_from_sprosit_reya(chat_id):
-    send_message(chat_id, get_s8_intro_sprosit_reya())
-    keyboard = set_main_keyboard([
-        "Не реагировать и идти дальше",
-        "Коротко ответить мужчине",
-        "Отдёрнуть руку",
-        "Попытаться помочь"
-    ])
-    send_message(chat_id, get_s8_common_text(), reply_markup=keyboard)
-    user_states[chat_id] = "S8"
+    text = get_s8_intro_sprosit_reya() + "\n\n" + get_s8_common_text()
+    send_story(
+        chat_id,
+        "S8",
+        text,
+        [
+            "🚶 Не реагировать и идти дальше",
+            "💬 Коротко ответить мужчине",
+            "✋ Отдёрнуть руку",
+            "🫴 Попытаться помочь"
+        ],
+        image="s8.jpg"
+    )
 
 
 def send_s8_from_sprosit_stiva(chat_id):
-    send_message(chat_id, get_s8_intro_sprosit_stiva())
-    keyboard = set_main_keyboard([
-        "Не реагировать и идти дальше",
-        "Коротко ответить мужчине",
-        "Отдёрнуть руку",
-        "Попытаться помочь"
-    ])
-    send_message(chat_id, get_s8_common_text(), reply_markup=keyboard)
-    user_states[chat_id] = "S8"
+    text = get_s8_intro_sprosit_stiva() + "\n\n" + get_s8_common_text()
+    send_story(
+        chat_id,
+        "S8",
+        text,
+        [
+            "🚶 Не реагировать и идти дальше",
+            "💬 Коротко ответить мужчине",
+            "✋ Отдёрнуть руку",
+            "🫴 Попытаться помочь"
+        ],
+        image="s8.jpg"
+    )
 
 
 def send_s8_from_rassmatrivala(chat_id):
-    send_message(chat_id, get_s8_intro_rassmatrivala())
-    keyboard = set_main_keyboard([
-        "Не реагировать и идти дальше",
-        "Коротко ответить мужчине",
-        "Отдёрнуть руку",
-        "Попытаться помочь"
-    ])
-    send_message(chat_id, get_s8_common_text(), reply_markup=keyboard)
-    user_states[chat_id] = "S8"
+    text = get_s8_intro_rassmatrivala() + "\n\n" + get_s8_common_text()
+    send_story(
+        chat_id,
+        "S8",
+        text,
+        [
+            "🚶 Не реагировать и идти дальше",
+            "💬 Коротко ответить мужчине",
+            "✋ Отдёрнуть руку",
+            "🫴 Попытаться помочь"
+        ],
+        image="s8.jpg"
+    )
 
 
 def send_s8_from_vzyat_za_ruku(chat_id):
-    send_message(chat_id, get_s8_intro_vzyat_za_ruku())
-    keyboard = set_main_keyboard([
-        "Не реагировать и идти дальше",
-        "Коротко ответить мужчине",
-        "Отдёрнуть руку",
-        "Попытаться помочь"
-    ])
-    send_message(chat_id, get_s8_common_text(), reply_markup=keyboard)
-    user_states[chat_id] = "S8"
+    text = get_s8_intro_vzyat_za_ruku() + "\n\n" + get_s8_common_text()
+    send_story(
+        chat_id,
+        "S8",
+        text,
+        [
+            "🚶 Не реагировать и идти дальше",
+            "💬 Коротко ответить мужчине",
+            "✋ Отдёрнуть руку",
+            "🫴 Попытаться помочь"
+        ],
+        image="s8.jpg"
+    )
 
 
 def send_s9_no_react(chat_id):
-    send_message(chat_id, get_s9_intro_no_react())
-    keyboard = set_main_keyboard([
-        "Удержать темп и идти дальше",
-        "Ускориться и догнать Рея",
-        "Оглянуться"
-    ])
-    send_message(chat_id, get_s9_common_text(), reply_markup=keyboard)
-    user_states[chat_id] = "S9"
+    text = get_s9_intro_no_react() + "\n\n" + get_s9_common_text()
+    send_story(
+        chat_id,
+        "S9_SAFE",
+        text,
+        ["➡ Удержать темп и идти дальше", "⚡ Ускориться и догнать Рея", "👁 Оглянуться"],
+        image="s9_safe.jpg"
+    )
 
 
 def send_s9_answered(chat_id):
-    keyboard = set_main_keyboard([
-        "Удержать темп и идти дальше",
-        "Ускориться и догнать Рея",
-        "Оглянуться"
-    ])
-    send_message(chat_id, get_s9_intro_answered(), reply_markup=keyboard)
-    user_states[chat_id] = "S9"
+    send_story(
+        chat_id,
+        "S9_DANGER",
+        get_s9_intro_answered(),
+        ["➡ Удержать темп и идти дальше", "⚡ Ускориться и догнать Рея", "👁 Оглянуться"],
+        image="s9_danger.jpg"
+    )
 
 
 def send_s9_pull_hand(chat_id):
-    keyboard = set_main_keyboard([
-        "Удержать темп и идти дальше",
-        "Ускориться и догнать Рея",
-        "Оглянуться"
-    ])
-    send_message(chat_id, get_s9_intro_pull_hand(), reply_markup=keyboard)
-    user_states[chat_id] = "S9"
+    send_story(
+        chat_id,
+        "S9_DANGER",
+        get_s9_intro_pull_hand(),
+        ["➡ Удержать темп и идти дальше", "⚡ Ускориться и догнать Рея", "👁 Оглянуться"],
+        image="s9_danger.jpg"
+    )
 
 
 def send_s9_help(chat_id):
-    keyboard = set_main_keyboard([
-        "Удержать темп и идти дальше",
-        "Ускориться и догнать Рея",
-        "Оглянуться"
-    ])
-    send_message(chat_id, get_s9_intro_help(), reply_markup=keyboard)
-    user_states[chat_id] = "S9"
+    send_story(
+        chat_id,
+        "S9_DANGER",
+        get_s9_intro_help(),
+        ["➡ Удержать темп и идти дальше", "⚡ Ускориться и догнать Рея", "👁 Оглянуться"],
+        image="s9_danger.jpg"
+    )
 
 
 def send_s10_hold_tempo(chat_id):
-    send_message(chat_id, get_s10_intro_hold_tempo())
-    send_message(chat_id, get_s10_common_text())
-    user_states[chat_id] = "S10"
+    text = get_s10_intro_hold_tempo() + "\n\n" + get_s10_common_text(chat_id)
+    send_story(
+        chat_id,
+        "S10",
+        text,
+        ["▶ Следующая серия", "🔁 Начать заново"],
+        image="s10.jpg"
+    )
 
 
 def send_s10_speed_up(chat_id):
-    send_message(chat_id, get_s10_intro_speed_up())
-    send_message(chat_id, get_s10_common_text())
-    user_states[chat_id] = "S10"
+    text = get_s10_intro_speed_up() + "\n\n" + get_s10_common_text(chat_id)
+    send_story(
+        chat_id,
+        "S10",
+        text,
+        ["▶ Следующая серия", "🔁 Начать заново"],
+        image="s10.jpg"
+    )
 
 
 def send_s10_look_back(chat_id):
-    send_message(chat_id, get_s10_intro_look_back())
-    send_message(chat_id, get_s10_common_text())
-    user_states[chat_id] = "S10"
+    text = get_s10_intro_look_back() + "\n\n" + get_s10_common_text(chat_id)
+    send_story(
+        chat_id,
+        "S10",
+        text,
+        ["▶ Следующая серия", "🔁 Начать заново"],
+        image="s10.jpg"
+    )
 
+
+def send_s11(chat_id):
+    send_story(
+        chat_id,
+        "S11",
+        get_s11_text(),
+        ["🔔 Уведомить о выходе", "🔁 Начать заново"]
+    )
+
+
+# =========================
+# Flask routes
+# =========================
 
 @app.route("/", methods=["GET"])
 def home():
@@ -2862,255 +3067,185 @@ def webhook():
     if not data:
         return "no data", 200
 
-    if "message" in data:
-        message = data["message"]
-        chat_id = message["chat"]["id"]
-        text = message.get("text", "").strip()
+    if "message" not in data:
+        return "ok", 200
 
-        init_user(chat_id)
+    message = data["message"]
+    chat_id = message["chat"]["id"]
+    text = message.get("text", "").strip()
 
-        if text == "/start":
-            user_stats[chat_id] = {
-                "решимость": 0,
-                "восприятие": 0,
-                "Стив": 0,
-                "Рей": 0,
-                "контроль": 0,
-                "замечена": 0,
-                "сомнение": 0,
-                "зависимость": 0,
-                "внимание": 0,
-            }
-            send_s1(chat_id)
+    user = get_user(chat_id)
+    current_scene = user["scene"]
 
-        elif user_states.get(chat_id) == "S1":
-            if text == "Кто ты такой?":
-                apply_stats(chat_id, {
-                    "решимость": 1,
-                    "Стив": 1
-                })
-                send_s2_from_kto(chat_id)
+    # глобальный рестарт
+    if text == "/start" or text == "🔁 Начать заново":
+        reset_user(chat_id)
+        send_s1(chat_id)
+        return "ok", 200
 
-            elif text == "что происходит?":
-                apply_stats(chat_id, {
-                    "решимость": 1,
-                    "восприятие": 1,
-                    "Рей": 1
-                })
-                send_s2_from_chto(chat_id)
-
-            elif text == "Промолчать":
-                apply_stats(chat_id, {
-                    "решимость": -1
-                })
-                send_s2_from_promolchat(chat_id)
-
-            elif text == "Игнорировать":
-                apply_stats(chat_id, {
-                    "восприятие": -1,
-                    "Рей": -1
-                })
-                send_s2_from_ignore(chat_id)
-
-            else:
-                send_message(chat_id, "Выбери один из вариантов на кнопках.")
-
-        elif user_states.get(chat_id) == "S2":
-            if text == "О чем вы?":
-                apply_stats(chat_id, {
-                    "решимость": 1,
-                    "Рей": 1
-                })
-                send_s3_from_o_chem_vy(chat_id)
-
-            elif text == "Осмотреться":
-                apply_stats(chat_id, {
-                    "восприятие": 1,
-                    "Стив": 1
-                })
-                send_s3_from_osmotretsya(chat_id)
-
-            elif text == "Игнор":
-                apply_stats(chat_id, {
-                    "восприятие": -1,
-                    "Рей": -2
-                })
-                send_s3_from_ignor(chat_id)
-
-            else:
-                send_message(chat_id, "Выбери один из вариантов на кнопках.")
-
-        elif user_states.get(chat_id) == "S3":
-            if text == "О чем вы?":
-                apply_stats(chat_id, {
-                    "решимость": 1,
-                    "Рей": 1
-                })
-                send_s4_from_o_chem_vy(chat_id)
-
-            elif text == "Не буду слушать":
-                apply_stats(chat_id, {
-                    "решимость": 1,
-                    "контроль": -1,
-                    "Рей": -1,
-                    "Стив": 1
-                })
-                send_s4_from_ne_budu_slushat(chat_id)
-
-            elif text == "Кивнуть":
-                apply_stats(chat_id, {
-                    "контроль": 1,
-                    "Рей": 1
-                })
-                send_s4_from_kivnut(chat_id)
-
-            else:
-                send_message(chat_id, "Выбери один из вариантов на кнопках.")
-
-        elif user_states.get(chat_id) == "S4":
-            if text == "Замереть":
-                apply_stats(chat_id, {
-                    "контроль": 2,
-                    "Рей": 1
-                })
-                send_s5_from_zameret(chat_id)
-
-            elif text == "Открыть глаза":
-                apply_stats(chat_id, {
-                    "контроль": -1,
-                    "восприятие": 1,
-                    "Стив": 1,
-                    "замечена": 1
-                })
-                send_s5_from_otkryt_glaza(chat_id)
-
-            elif text == "Отшатнуться":
-                apply_stats(chat_id, {
-                    "контроль": -2,
-                    "Рей": -1,
-                    "замечена": 1
-                })
-                send_s5_from_otshatnutsya(chat_id)
-
-            else:
-                send_message(chat_id, "Выбери один из вариантов на кнопках.")
-
-        elif user_states.get(chat_id) == "S5":
-            if text == "Пойти дальше":
-                apply_stats(chat_id, {
-                    "решимость": 1,
-                    "Рей": 1
-                })
-                send_s6a_from_go(chat_id)
-
-            elif text == "Остаться":
-                apply_stats(chat_id, {
-                    "решимость": -2
-                })
-                send_s6b(chat_id)
-
-            else:
-                send_message(chat_id, "Выбери один из вариантов на кнопках.")
-
-        elif user_states.get(chat_id) == "S6B":
-            if text == "Пойти дальше":
-                apply_stats(chat_id, {
-                    "Рей": -1,
-                    "Стив": 1,
-                    "сомнение": 1
-                })
-                send_s6a_from_doubt(chat_id)
-
-            elif text == "Остаться":
-                send_s6b_final(chat_id)
-
-            else:
-                send_message(chat_id, "Выбери один из вариантов на кнопках.")
-
-        elif user_states.get(chat_id) == "S6A":
-            if text == "Спросить Рея":
-                send_s7_from_rey(chat_id)
-
-            elif text == "Спросить Стива":
-                send_s7_from_stiv(chat_id)
-
-            elif text == "Осмотреться":
-                send_s7_from_osmotretsya(chat_id)
-
-            else:
-                send_message(chat_id, "Выбери один из вариантов на кнопках.")
-
-        elif user_states.get(chat_id) == "S7":
-            if text == "Игнорировать их":
-                send_s8_from_ignore(chat_id)
-
-            elif text == "Спросить Рея":
-                send_s8_from_sprosit_reya(chat_id)
-
-            elif text == "Спросить Стива":
-                send_s8_from_sprosit_stiva(chat_id)
-
-            elif text == "Рассмотреть их":
-                send_s8_from_rassmatrivala(chat_id)
-
-            elif text == "Взять кого-то за руку":
-                apply_stats(chat_id, {
-                    "Стив": 1,
-                    "Рей": 1,
-                    "контроль": 1,
-                    "зависимость": 1
-                })
-                send_s8_from_vzyat_za_ruku(chat_id)
-
-            else:
-                send_message(chat_id, "Выбери один из вариантов на кнопках.")
-
-        elif user_states.get(chat_id) == "S8":
-            if text == "Не реагировать и идти дальше":
-                send_s9_no_react(chat_id)
-
-            elif text == "Коротко ответить мужчине":
-                send_s9_answered(chat_id)
-
-            elif text == "Отдёрнуть руку":
-                send_s9_pull_hand(chat_id)
-
-            elif text == "Попытаться помочь":
-                send_s9_help(chat_id)
-
-            else:
-                send_message(chat_id, "Выбери один из вариантов на кнопках.")
-
-        elif user_states.get(chat_id) == "S9":
-            if text == "Удержать темп и идти дальше":
-                apply_stats(chat_id, {
-                    "Рей": 1
-                })
-                send_s10_hold_tempo(chat_id)
-
-            elif text == "Ускориться и догнать Рея":
-                apply_stats(chat_id, {
-                    "Стив": 1
-                })
-                send_s10_speed_up(chat_id)
-
-            elif text == "Оглянуться":
-                apply_stats(chat_id, {
-                    "внимание": 2
-                })
-                send_s10_look_back(chat_id)
-
-            else:
-                send_message(chat_id, "Выбери один из вариантов на кнопках.")
-
-        elif user_states.get(chat_id) == "S10":
-            send_message(chat_id, "Продолжение следует...")
-
-        elif user_states.get(chat_id) == "FINAL_EARLY":
-            send_message(chat_id, "Чтобы начать заново, нажми /start")
-
+    # подписка на следующую серию
+    if current_scene == "S11" and text == "🔔 Уведомить о выходе":
+        added = subscribe_user(chat_id)
+        if added:
+            send_text(
+                chat_id,
+                "Готово. Я сохраню тебя в списке ожидания. Когда вторая серия будет готова, можно будет разослать уведомление.",
+                ["🔔 Уведомить о выходе", "🔁 Начать заново"]
+            )
         else:
-            send_message(chat_id, "Напиши /start")
+            send_text(
+                chat_id,
+                "Ты уже в списке ожидания. Я не забыла 🙂",
+                ["🔔 Уведомить о выходе", "🔁 Начать заново"]
+            )
+        return "ok", 200
+
+    # =========================
+    # Логика сцен
+    # =========================
+
+    if current_scene == "S1":
+        if text == "❓ Кто ты такой?":
+            apply_stats(chat_id, {"решимость": 1, "Стив": 1})
+            send_s2_from_kto(chat_id)
+        elif text == "❓ Что происходит?":
+            apply_stats(chat_id, {"решимость": 1, "восприятие": 1, "Рей": 1})
+            send_s2_from_chto(chat_id)
+        elif text == "😶 Промолчать":
+            apply_stats(chat_id, {"решимость": -1})
+            send_s2_from_promolchat(chat_id)
+        elif text == "🚫 Игнорировать":
+            apply_stats(chat_id, {"восприятие": -1, "Рей": -1})
+            send_s2_from_ignore(chat_id)
+        else:
+            send_text(chat_id, "Выбери один из вариантов на кнопках.")
+
+    elif current_scene == "S2":
+        if text == "❓ О чем вы?":
+            apply_stats(chat_id, {"решимость": 1, "Рей": 1})
+            send_s3_from_o_chem_vy(chat_id)
+        elif text == "👁 Осмотреться":
+            apply_stats(chat_id, {"восприятие": 1, "Стив": 1})
+            send_s3_from_osmotretsya(chat_id)
+        elif text == "🚫 Игнорировать":
+            apply_stats(chat_id, {"восприятие": -1, "Рей": -2})
+            send_s3_from_ignor(chat_id)
+        else:
+            send_text(chat_id, "Выбери один из вариантов на кнопках.")
+
+    elif current_scene == "S3":
+        if text == "❓ О чем вы?":
+            apply_stats(chat_id, {"решимость": 1, "Рей": 1})
+            send_s4_from_o_chem_vy(chat_id)
+        elif text == "🚫 Не буду слушать":
+            apply_stats(chat_id, {"решимость": 1, "контроль": -1, "Рей": -1, "Стив": 1})
+            send_s4_from_ne_budu_slushat(chat_id)
+        elif text == "✔ Кивнуть":
+            apply_stats(chat_id, {"контроль": 1, "Рей": 1})
+            send_s4_from_kivnut(chat_id)
+        else:
+            send_text(chat_id, "Выбери один из вариантов на кнопках.")
+
+    elif current_scene == "S4":
+        if text == "🧊 Замереть":
+            apply_stats(chat_id, {"контроль": 2, "Рей": 1})
+            send_s5_from_zameret(chat_id)
+        elif text == "👁 Открыть глаза":
+            apply_stats(chat_id, {"контроль": -1, "восприятие": 1, "Стив": 1, "замечена": 1})
+            send_s5_from_otkryt_glaza(chat_id)
+        elif text == "↩ Отшатнуться":
+            apply_stats(chat_id, {"контроль": -2, "Рей": -1, "замечена": 1})
+            send_s5_from_otshatnutsya(chat_id)
+        else:
+            send_text(chat_id, "Выбери один из вариантов на кнопках.")
+
+    elif current_scene == "S5":
+        if text == "➡ Пойти дальше":
+            apply_stats(chat_id, {"решимость": 1, "Рей": 1})
+            send_s6a_from_go(chat_id)
+        elif text == "⏸ Остаться":
+            apply_stats(chat_id, {"решимость": -2})
+            send_s6b(chat_id)
+        else:
+            send_text(chat_id, "Выбери один из вариантов на кнопках.")
+
+    elif current_scene == "S6B":
+        if text == "➡ Всё же пойти":
+            apply_stats(chat_id, {"Рей": -1, "Стив": 1, "сомнение": 1})
+            send_s6a_from_doubt(chat_id)
+        elif text == "⏸ Остаться":
+            send_s6b_final(chat_id)
+        else:
+            send_text(chat_id, "Выбери один из вариантов на кнопках.")
+
+    elif current_scene == "S6A":
+        if text == "❓ Спросить Рея":
+            send_s7_from_rey(chat_id)
+        elif text == "😏 Спросить Стива":
+            send_s7_from_stiv(chat_id)
+        elif text == "👁 Осмотреться":
+            send_s7_from_osmotretsya(chat_id)
+        else:
+            send_text(chat_id, "Выбери один из вариантов на кнопках.")
+
+    elif current_scene == "S7":
+        if text == "🚶 Игнорировать их":
+            send_s8_from_ignore(chat_id)
+        elif text == "❓ Спросить Рея":
+            send_s8_from_sprosit_reya(chat_id)
+        elif text == "😏 Спросить Стива":
+            send_s8_from_sprosit_stiva(chat_id)
+        elif text == "👁 Рассмотреть их":
+            send_s8_from_rassmatrivala(chat_id)
+        elif text == "🤝 Взять кого-то за руку":
+            apply_stats(chat_id, {"Стив": 1, "Рей": 1, "контроль": 1, "зависимость": 1})
+            send_s8_from_vzyat_za_ruku(chat_id)
+        else:
+            send_text(chat_id, "Выбери один из вариантов на кнопках.")
+
+    elif current_scene == "S8":
+        if text == "🚶 Не реагировать и идти дальше":
+            send_s9_no_react(chat_id)
+        elif text == "💬 Коротко ответить мужчине":
+            send_s9_answered(chat_id)
+        elif text == "✋ Отдёрнуть руку":
+            send_s9_pull_hand(chat_id)
+        elif text == "🫴 Попытаться помочь":
+            send_s9_help(chat_id)
+        else:
+            send_text(chat_id, "Выбери один из вариантов на кнопках.")
+
+    elif current_scene in ["S9_SAFE", "S9_DANGER"]:
+        if text == "➡ Удержать темп и идти дальше":
+            apply_stats(chat_id, {"Рей": 1})
+            send_s10_hold_tempo(chat_id)
+        elif text == "⚡ Ускориться и догнать Рея":
+            apply_stats(chat_id, {"Стив": 1})
+            send_s10_speed_up(chat_id)
+        elif text == "👁 Оглянуться":
+            apply_stats(chat_id, {"внимание": 2})
+            send_s10_look_back(chat_id)
+        else:
+            send_text(chat_id, "Выбери один из вариантов на кнопках.")
+
+    elif current_scene == "S10":
+        if text == "▶ Следующая серия":
+            send_s11(chat_id)
+        else:
+            send_text(chat_id, "Выбери один из вариантов на кнопках.")
+
+    elif current_scene == "FINAL_EARLY":
+        send_text(chat_id, "Нажми «🔁 Начать заново», если хочешь пройти ещё раз.", ["🔁 Начать заново"])
+
+    elif current_scene == "S11":
+        if text == "🔁 Начать заново":
+            reset_user(chat_id)
+            send_s1(chat_id)
+        else:
+            send_text(chat_id, "Выбери один из вариантов на кнопках.", ["🔔 Уведомить о выходе", "🔁 Начать заново"])
+
+    else:
+        send_text(chat_id, "Напиши /start")
 
     return "ok", 200
 
