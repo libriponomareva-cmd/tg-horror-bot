@@ -10555,7 +10555,7 @@ def webhook():
             send_message(chat_id, "Выбери один из вариантов на кнопках.")
             return "ok", 200
 
-     elif current_scene == "S13":
+   elif current_scene == "S13":
         if text == "🤲 Попытаться разбудить Крис":
             apply_stats(chat_id, {"решимость": 2, "ответственность": 1})
             send_ep2_s14(chat_id)
