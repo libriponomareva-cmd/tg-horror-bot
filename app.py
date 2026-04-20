@@ -9365,9 +9365,9 @@ def webhook():
     current_scene = user["scene"]
 
     if text == "/start" or text == "🔁 Начать заново":
-    reset_user(chat_id)
-    send_start_menu(chat_id)
-    return "ok", 200
+        reset_user(chat_id)
+        send_start_menu(chat_id)
+        return "ok", 200
 
     # =========================
     # Серия 1
