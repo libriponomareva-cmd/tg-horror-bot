@@ -9504,14 +9504,21 @@ def webhook():
         else:
             send_message(chat_id, "Выбери один из вариантов на кнопках.")
 
-    elif current_scene == "S10":
+elif current_scene == "S10":
         if text == "▶ Следующая серия":
             send_ep2_s11(chat_id)
+            return "ok", 200
         else:
             send_message(chat_id, "Выбери один из вариантов на кнопках.")
+            return "ok", 200
 
     elif current_scene == "FINAL_EARLY":
-        send_message(chat_id, "Нажми «🔁 Начать заново», если хочешь пройти ещё раз.", build_keyboard([["🔁 Начать заново"]]))
+        send_message(
+            chat_id,
+            "Нажми «🔁 Начать заново», если хочешь пройти ещё раз.",
+            build_keyboard([["🔁 Начать заново"]])
+        )
+        return "ok", 200
 
     # =========================
     # Серия 2
@@ -9520,54 +9527,68 @@ def webhook():
         if text == "😶 Промолчать":
             apply_stats(chat_id, {"контроль": 1, "связь_Рей": 1, "связь_Крис": -1})
             send_ep2_s12(chat_id, variant="silent")
+            return "ok", 200
 
         elif text == "💬 Ответить Крис":
             apply_stats(chat_id, {"решимость": 1, "связь_Стив": 1})
             send_ep2_s12(chat_id, variant="answer_kris")
+            return "ok", 200
 
         elif text == "🛡 Обратиться к Рею":
             apply_stats(chat_id, {"контроль": 1, "связь_Рей": 2})
             send_ep2_s12(chat_id, variant="rey")
+            return "ok", 200
 
         elif text == "❤️ Поддержать Стива":
             apply_stats(chat_id, {"связь_Стив": 2, "контроль": 1, "связь_Крис": -1})
             send_ep2_s12(chat_id, variant="steve")
+            return "ok", 200
 
         else:
             send_message(chat_id, "Выбери один из вариантов на кнопках.")
+            return "ok", 200
 
     elif current_scene == "S12":
         if text == "🪑 Сесть и отдохнуть":
             send_ep2_s12a(chat_id, variant="rest")
+            return "ok", 200
 
         elif text == "👁 Осмотреться":
             send_ep2_s12a(chat_id, variant="look")
+            return "ok", 200
 
         elif text == "🍽 Набраться сил":
             send_ep2_s12a(chat_id, variant="food")
+            return "ok", 200
 
         elif text == "🚶 Идти дальше":
             send_ep2_s13(chat_id)
+            return "ok", 200
 
         else:
             send_message(chat_id, "Выбери один из вариантов на кнопках.")
+            return "ok", 200
 
     elif current_scene == "S12A":
         if text == "😏 Подойти к Стиву":
             send_ep2_s12a_steve(chat_id)
+            return "ok", 200
 
         elif text == "🛡 Подойти к Рею":
             send_ep2_s12a_rey(chat_id)
+            return "ok", 200
 
         elif text == "🔥 Подойти к Крис":
             send_ep2_s12a_kris(chat_id)
+            return "ok", 200
 
         elif text == "💤 Остаться и лечь спать":
             send_ep2_s12b(chat_id)
+            return "ok", 200
 
         else:
             send_message(chat_id, "Выбери один из вариантов на кнопках.")
-
+            return "ok", 200
     elif current_scene == "S12a_Steve":
         if text == "💤 Пойти отдохнуть":
             apply_stats(chat_id, {"связь_Стив": 2, "контроль": 1})
@@ -10079,9 +10100,8 @@ def webhook():
             send_message(chat_id, "Выбери один из вариантов на кнопках.")
 
     else:
-        send_message(chat_id, "Напиши /start")
-
-    return "ok", 200
+        send_message(chat_id, f"Неизвестная сцена: {current_scene}. Напиши /start")
+        return "ok", 200
 
 
 if __name__ == "__main__":
