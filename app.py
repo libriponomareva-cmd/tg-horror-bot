@@ -9339,6 +9339,10 @@ def send_ep2_s20b(chat_id):
 # Flask routes
 # =========================
 
+# =========================
+# Flask routes
+# =========================
+
 @app.route("/", methods=["GET"])
 def home():
     return "Bot is running", 200
@@ -9372,139 +9376,185 @@ def webhook():
     # =========================
     # Серия 1
     # =========================
+
     if current_scene == "START_MENU":
         if text == "1️⃣ Первая серия":
             send_s1(chat_id)
+            return "ok", 200
         elif text == "2️⃣ Вторая серия":
             send_ep2_s11(chat_id)
+            return "ok", 200
         else:
             send_message(chat_id, "Выбери один из вариантов на кнопках.")
-            
-    if current_scene == "S1":
+            return "ok", 200
+
+    elif current_scene == "S1":
         if text == "❓ Кто ты такой?":
             apply_stats(chat_id, {"решимость": 1, "Стив": 1})
             send_s2_from_kto(chat_id)
+            return "ok", 200
         elif text == "❓ Что происходит?":
             apply_stats(chat_id, {"решимость": 1, "восприятие": 1, "Рей": 1})
             send_s2_from_chto(chat_id)
+            return "ok", 200
         elif text == "😶 Промолчать":
             apply_stats(chat_id, {"решимость": -1})
             send_s2_from_promolchat(chat_id)
+            return "ok", 200
         elif text == "🚫 Игнорировать":
             apply_stats(chat_id, {"восприятие": -1, "Рей": -1})
             send_s2_from_ignore(chat_id)
+            return "ok", 200
         else:
             send_message(chat_id, "Выбери один из вариантов на кнопках.")
+            return "ok", 200
 
     elif current_scene == "S2":
         if text == "❓ О чем вы?":
             apply_stats(chat_id, {"решимость": 1, "Рей": 1})
             send_s3_from_o_chem_vy(chat_id)
+            return "ok", 200
         elif text == "👁 Осмотреться":
             apply_stats(chat_id, {"восприятие": 1, "Стив": 1})
             send_s3_from_osmotretsya(chat_id)
+            return "ok", 200
         elif text == "🚫 Игнорировать":
             apply_stats(chat_id, {"восприятие": -1, "Рей": -2})
             send_s3_from_ignor(chat_id)
+            return "ok", 200
         else:
             send_message(chat_id, "Выбери один из вариантов на кнопках.")
+            return "ok", 200
 
     elif current_scene == "S3":
         if text == "❓ О чем вы?":
             apply_stats(chat_id, {"решимость": 1, "Рей": 1})
             send_s4_from_o_chem_vy(chat_id)
+            return "ok", 200
         elif text == "🚫 Не буду слушать":
             apply_stats(chat_id, {"решимость": 1, "контроль": -1, "Рей": -1, "Стив": 1})
             send_s4_from_ne_budu_slushat(chat_id)
+            return "ok", 200
         elif text == "✔ Кивнуть":
             apply_stats(chat_id, {"контроль": 1, "Рей": 1})
             send_s4_from_kivnut(chat_id)
+            return "ok", 200
         else:
             send_message(chat_id, "Выбери один из вариантов на кнопках.")
+            return "ok", 200
 
     elif current_scene == "S4":
         if text == "🧊 Замереть":
             apply_stats(chat_id, {"контроль": 2, "Рей": 1})
             send_s5_from_zameret(chat_id)
+            return "ok", 200
         elif text == "👁 Открыть глаза":
             apply_stats(chat_id, {"контроль": -1, "восприятие": 1, "Стив": 1, "замечена": 1})
             send_s5_from_otkryt_glaza(chat_id)
+            return "ok", 200
         elif text == "↩ Отшатнуться":
             apply_stats(chat_id, {"контроль": -2, "Рей": -1, "замечена": 1})
             send_s5_from_otshatnutsya(chat_id)
+            return "ok", 200
         else:
             send_message(chat_id, "Выбери один из вариантов на кнопках.")
+            return "ok", 200
 
     elif current_scene == "S5":
         if text == "➡ Пойти дальше":
             apply_stats(chat_id, {"решимость": 1, "Рей": 1})
             send_s6a_from_go(chat_id)
+            return "ok", 200
         elif text == "⏸ Остаться":
             apply_stats(chat_id, {"решимость": -2})
             send_s6b(chat_id)
+            return "ok", 200
         else:
             send_message(chat_id, "Выбери один из вариантов на кнопках.")
+            return "ok", 200
 
     elif current_scene == "S6B":
         if text == "➡ Всё же пойти":
             apply_stats(chat_id, {"Рей": -1, "Стив": 1, "сомнение": 1})
             send_s6a_from_doubt(chat_id)
+            return "ok", 200
         elif text == "⏸ Остаться":
             send_s6b_final(chat_id)
+            return "ok", 200
         else:
             send_message(chat_id, "Выбери один из вариантов на кнопках.")
+            return "ok", 200
 
     elif current_scene == "S6A":
         if text == "❓ Спросить Рея":
             send_s7_from_rey(chat_id)
+            return "ok", 200
         elif text == "😏 Спросить Стива":
             send_s7_from_stiv(chat_id)
+            return "ok", 200
         elif text == "👁 Осмотреться":
             send_s7_from_osmotretsya(chat_id)
+            return "ok", 200
         else:
             send_message(chat_id, "Выбери один из вариантов на кнопках.")
+            return "ok", 200
 
     elif current_scene == "S7":
         if text == "🚶 Игнорировать их":
             send_s8_from_ignore(chat_id)
+            return "ok", 200
         elif text == "❓ Спросить Рея":
             send_s8_from_sprosit_reya(chat_id)
+            return "ok", 200
         elif text == "😏 Спросить Стива":
             send_s8_from_sprosit_stiva(chat_id)
+            return "ok", 200
         elif text == "👁 Рассмотреть их":
             send_s8_from_rassmatrivala(chat_id)
+            return "ok", 200
         elif text == "🤝 Взять кого-то за руку":
             apply_stats(chat_id, {"Стив": 1, "Рей": 1, "контроль": 1, "зависимость": 1})
             send_s8_from_vzyat_za_ruku(chat_id)
+            return "ok", 200
         else:
             send_message(chat_id, "Выбери один из вариантов на кнопках.")
+            return "ok", 200
 
     elif current_scene == "S8":
         if text == "🚶 Не реагировать и идти дальше":
             send_s9_no_react(chat_id)
+            return "ok", 200
         elif text == "💬 Коротко ответить мужчине":
             send_s9_answered(chat_id)
+            return "ok", 200
         elif text == "✋ Отдёрнуть руку":
             send_s9_pull_hand(chat_id)
+            return "ok", 200
         elif text == "🫴 Попытаться помочь":
             send_s9_help(chat_id)
+            return "ok", 200
         else:
             send_message(chat_id, "Выбери один из вариантов на кнопках.")
+            return "ok", 200
 
     elif current_scene in ["S9_SAFE", "S9_DANGER"]:
         if text == "➡ Удержать темп и идти дальше":
             apply_stats(chat_id, {"Рей": 1})
             send_s10_hold_tempo(chat_id)
+            return "ok", 200
         elif text == "⚡ Ускориться и догнать Рея":
             apply_stats(chat_id, {"Стив": 1})
             send_s10_speed_up(chat_id)
+            return "ok", 200
         elif text == "👁 Оглянуться":
             apply_stats(chat_id, {"внимание": 2})
             send_s10_look_back(chat_id)
+            return "ok", 200
         else:
             send_message(chat_id, "Выбери один из вариантов на кнопках.")
+            return "ok", 200
 
-elif current_scene == "S10":
+    elif current_scene == "S10":
         if text == "▶ Следующая серия":
             send_ep2_s11(chat_id)
             return "ok", 200
@@ -9523,27 +9573,24 @@ elif current_scene == "S10":
     # =========================
     # Серия 2
     # =========================
+
     elif current_scene == "S11":
         if text == "😶 Промолчать":
             apply_stats(chat_id, {"контроль": 1, "связь_Рей": 1, "связь_Крис": -1})
             send_ep2_s12(chat_id, variant="silent")
             return "ok", 200
-
         elif text == "💬 Ответить Крис":
             apply_stats(chat_id, {"решимость": 1, "связь_Стив": 1})
             send_ep2_s12(chat_id, variant="answer_kris")
             return "ok", 200
-
         elif text == "🛡 Обратиться к Рею":
             apply_stats(chat_id, {"контроль": 1, "связь_Рей": 2})
             send_ep2_s12(chat_id, variant="rey")
             return "ok", 200
-
         elif text == "❤️ Поддержать Стива":
             apply_stats(chat_id, {"связь_Стив": 2, "контроль": 1, "связь_Крис": -1})
             send_ep2_s12(chat_id, variant="steve")
             return "ok", 200
-
         else:
             send_message(chat_id, "Выбери один из вариантов на кнопках.")
             return "ok", 200
@@ -9552,19 +9599,15 @@ elif current_scene == "S10":
         if text == "🪑 Сесть и отдохнуть":
             send_ep2_s12a(chat_id, variant="rest")
             return "ok", 200
-
         elif text == "👁 Осмотреться":
             send_ep2_s12a(chat_id, variant="look")
             return "ok", 200
-
         elif text == "🍽 Набраться сил":
             send_ep2_s12a(chat_id, variant="food")
             return "ok", 200
-
         elif text == "🚶 Идти дальше":
             send_ep2_s13(chat_id)
             return "ok", 200
-
         else:
             send_message(chat_id, "Выбери один из вариантов на кнопках.")
             return "ok", 200
@@ -9573,51 +9616,57 @@ elif current_scene == "S10":
         if text == "😏 Подойти к Стиву":
             send_ep2_s12a_steve(chat_id)
             return "ok", 200
-
         elif text == "🛡 Подойти к Рею":
             send_ep2_s12a_rey(chat_id)
             return "ok", 200
-
         elif text == "🔥 Подойти к Крис":
             send_ep2_s12a_kris(chat_id)
             return "ok", 200
-
         elif text == "💤 Остаться и лечь спать":
             send_ep2_s12b(chat_id)
             return "ok", 200
-
         else:
             send_message(chat_id, "Выбери один из вариантов на кнопках.")
             return "ok", 200
+
     elif current_scene == "S12a_Steve":
         if text == "💤 Пойти отдохнуть":
             apply_stats(chat_id, {"связь_Стив": 2, "контроль": 1})
             send_ep2_s12b(chat_id)
+            return "ok", 200
         elif text == "🤝 Предложить отдохнуть вместе":
             apply_stats(chat_id, {"связь_Стив": 2, "контроль": 1})
             send_ep2_s12c(chat_id)
+            return "ok", 200
         else:
             send_message(chat_id, "Выбери один из вариантов на кнопках.")
+            return "ok", 200
 
     elif current_scene == "S12a_Rey":
         if text == "💤 Пойти отдохнуть":
             apply_stats(chat_id, {"связь_Рей": 2, "контроль": 1})
             send_ep2_s12b(chat_id)
+            return "ok", 200
         elif text == "🤝 Предложить отдохнуть вместе":
             apply_stats(chat_id, {"связь_Рей": 2, "контроль": 1})
             send_ep2_s12c(chat_id)
+            return "ok", 200
         else:
             send_message(chat_id, "Выбери один из вариантов на кнопках.")
+            return "ok", 200
 
     elif current_scene == "S12a_Kris":
         if text == "💤 Пойти отдохнуть":
             apply_stats(chat_id, {"связь_Крис": 2, "решимость": 1})
             send_ep2_s12b(chat_id)
+            return "ok", 200
         elif text == "🤝 Предложить отдохнуть вместе":
             apply_stats(chat_id, {"связь_Крис": 2, "решимость": 1})
             send_ep2_s12c(chat_id)
+            return "ok", 200
         else:
             send_message(chat_id, "Выбери один из вариантов на кнопках.")
+            return "ok", 200
 
     elif current_scene == "S12c":
         stats = get_user(chat_id)["stats"]
@@ -9630,483 +9679,632 @@ elif current_scene == "S10":
             ):
                 apply_stats(chat_id, {"контроль": 1})
                 send_ep2_s12d(chat_id)
+                return "ok", 200
             else:
                 apply_stats(chat_id, {"контроль": 1})
                 send_ep2_s12b(chat_id)
+                return "ok", 200
         elif text == "💤 Всё же отдохнуть одной":
             send_ep2_s12b(chat_id)
+            return "ok", 200
         else:
             send_message(chat_id, "Выбери один из вариантов на кнопках.")
+            return "ok", 200
 
     elif current_scene == "S12d":
         if text == "🌙 Закрыть глаза":
             send_ep2_s12b(chat_id)
+            return "ok", 200
         else:
             send_message(chat_id, "Выбери один из вариантов на кнопках.")
+            return "ok", 200
 
     elif current_scene == "S12b":
         if text == "📱 Взять телефон":
             send_ep2_s12b_take(chat_id)
+            return "ok", 200
         elif text == "🧊 Замереть и ничего не делать":
             send_ep2_s12b_throw(chat_id)
+            return "ok", 200
         elif text == "👁 Осмотреться вокруг":
             apply_stats(chat_id, {"восприятие": 2, "тревожность": 1})
             send_ep2_s12b_see(chat_id)
+            return "ok", 200
         else:
             send_message(chat_id, "Выбери один из вариантов на кнопках.")
+            return "ok", 200
 
     elif current_scene == "S12b_see":
         if text == "📱 Всё-таки взять телефон":
             apply_stats(chat_id, {"восприятие": 2, "тревожность": 1})
             send_ep2_s12b_take(chat_id)
+            return "ok", 200
         elif text == "🚪 Подойти к двери":
             apply_stats(chat_id, {"восприятие": 2, "тревожность": 1})
             send_ep2_s12b_door(chat_id)
+            return "ok", 200
         elif text == "🧊 Замереть и не двигаться":
             apply_stats(chat_id, {"восприятие": 2, "тревожность": 1})
             send_ep2_s12b_ignore2(chat_id)
+            return "ok", 200
         else:
             send_message(chat_id, "Выбери один из вариантов на кнопках.")
+            return "ok", 200
 
     elif current_scene == "S12b_take":
         if text == "💬 Ответить":
             send_ep2_s12b_reply(chat_id)
+            return "ok", 200
         elif text == "👁 Просто смотреть, не отвечая":
             send_ep2_s12b_throw(chat_id)
+            return "ok", 200
         elif text == "🚪 Отвести взгляд и попытаться выйти":
             send_ep2_s12b_escape(chat_id)
+            return "ok", 200
         elif text == "✋ Вернуть на место и игнорировать":
             send_ep2_s12b_throw(chat_id)
+            return "ok", 200
         else:
             send_message(chat_id, "Выбери один из вариантов на кнопках.")
+            return "ok", 200
 
     elif current_scene == "S12b_reply":
         if text == "📝 Объяснить, где ты и что с тобой":
             apply_stats(chat_id, {"контроль": -1, "зависимость": 1})
             send_ep2_s12b2(chat_id)
+            return "ok", 200
         elif text == "🆘 Попросить помощи":
             apply_stats(chat_id, {"контроль": -1, "зависимость": 1})
             send_ep2_s12b2(chat_id)
+            return "ok", 200
         elif text == "🚫 Я не должна перед тобой отчитываться":
             apply_stats(chat_id, {"контроль": 2, "решимость": 1})
             send_ep2_s12b_boundaries(chat_id)
+            return "ok", 200
         else:
             send_message(chat_id, "Выбери один из вариантов на кнопках.")
+            return "ok", 200
 
     elif current_scene == "S12b2":
         if text == "⏳ Дождаться помощи":
             send_ep2_s12b2_wait(chat_id)
+            return "ok", 200
         elif text == "🏃 Бежать":
             send_ep2_s12b_escape(chat_id)
+            return "ok", 200
         else:
             send_message(chat_id, "Выбери один из вариантов на кнопках.")
+            return "ok", 200
 
     elif current_scene == "S12b2_wait":
         if text == "🔁 Начать заново":
             reset_user(chat_id)
             send_s1(chat_id)
+            return "ok", 200
         else:
             send_message(chat_id, "Нажми «🔁 Начать заново».", build_keyboard([["🔁 Начать заново"]]))
+            return "ok", 200
 
     elif current_scene == "S12b_boundaries":
         if text == "🏃 Бежать из комнаты":
             apply_stats(chat_id, {"контроль": 2, "решимость": 2})
             send_ep2_s12b_escape(chat_id)
+            return "ok", 200
         elif text == "💬 Попробовать объяснить нормально":
             apply_stats(chat_id, {"контроль": 2, "решимость": 2})
             send_ep2_s12b2(chat_id)
+            return "ok", 200
         elif text == "🆘 Попросить помощи":
             apply_stats(chat_id, {"контроль": 2, "решимость": 2})
             send_ep2_s12b2(chat_id)
+            return "ok", 200
         elif text == "✋ Ничего не писать и убрать телефон":
             apply_stats(chat_id, {"контроль": 2, "решимость": 2})
             send_ep2_s12b_throw(chat_id)
+            return "ok", 200
         else:
             send_message(chat_id, "Выбери один из вариантов на кнопках.")
+            return "ok", 200
 
     elif current_scene == "S12b_boundaries_alt":
         if text == "🚪 Сделать шаг назад и выйти из комнаты":
             apply_stats(chat_id, {"контроль": 1, "осознание": 2, "сомнение": 1})
             send_ep2_s12b_escape_alt(chat_id)
+            return "ok", 200
         elif text == "🏃 Бежать":
             apply_stats(chat_id, {"контроль": 1, "осознание": 2, "сомнение": 1})
             send_ep2_s12b_escape_alt(chat_id)
+            return "ok", 200
         elif text == "🚫 Спокойно сказать «я не обязана это объяснять» и уйти":
             apply_stats(chat_id, {"контроль": 1, "осознание": 2, "сомнение": 1})
             send_ep2_s12w(chat_id)
+            return "ok", 200
         elif text == "⬇ Замолчать и опустить взгляд":
             apply_stats(chat_id, {"контроль": 1, "осознание": 2, "сомнение": 1})
             send_ep2_s12b_ignore_end(chat_id)
+            return "ok", 200
         elif text == "❔ Сомневаться и не ответить":
             apply_stats(chat_id, {"контроль": 1, "осознание": 2, "сомнение": 1})
             send_ep2_s12b_ignore_end(chat_id)
+            return "ok", 200
         else:
             send_message(chat_id, "Выбери один из вариантов на кнопках.")
+            return "ok", 200
 
     elif current_scene == "S12b_throw":
         if text == "🙈 Сделать вид, что ничего не происходит":
             send_ep2_s12b_ignore2(chat_id)
+            return "ok", 200
         elif text == "🚶 Отойти от двери и не реагировать":
             send_ep2_s12b_ignore2(chat_id)
+            return "ok", 200
         elif text == "❓ Узнать кто там и что он хочет":
             send_ep2_s12b_open_talk(chat_id)
+            return "ok", 200
         elif text == "🏃 Начать искать другой выход":
             send_ep2_s12b_escape(chat_id)
+            return "ok", 200
         elif text == "👂 Подойти ближе к двери и прислушаться":
             send_ep2_s12b_door(chat_id)
+            return "ok", 200
         else:
             send_message(chat_id, "Выбери один из вариантов на кнопках.")
+            return "ok", 200
 
     elif current_scene == "S12b_door":
         if text == "❓ Спросить «кто там?»":
             apply_stats(chat_id, {"тревожность": 1, "внимание": 1})
             send_ep2_s12b_open_talk(chat_id)
+            return "ok", 200
         elif text == "✋ Потянуться к двери":
             apply_stats(chat_id, {"тревожность": 1, "внимание": 1})
             send_ep2_s12b_door_break(chat_id)
+            return "ok", 200
         elif text == "↩ Резко отступить и уйти":
             apply_stats(chat_id, {"тревожность": 1, "внимание": 1})
             send_ep2_s12b_escape(chat_id)
+            return "ok", 200
         elif text == "🧊 Замереть и не реагировать":
             apply_stats(chat_id, {"тревожность": 1, "внимание": 1})
             send_ep2_s12b_ignore2(chat_id)
+            return "ok", 200
         else:
             send_message(chat_id, "Выбери один из вариантов на кнопках.")
+            return "ok", 200
 
     elif current_scene == "S12b_open_talk":
         if text == "✋ Потянуться к двери":
             apply_stats(chat_id, {"тревожность": 1, "сомнение": 1, "внимание": 1})
             send_ep2_s12b_door_break(chat_id)
+            return "ok", 200
         elif text == "↩ Отступить и уйти":
             apply_stats(chat_id, {"тревожность": 1, "сомнение": 1, "внимание": 1})
             send_ep2_s12b_escape(chat_id)
+            return "ok", 200
         elif text == "🚫 Сказать «нет» и отойти":
             apply_stats(chat_id, {"тревожность": 1, "сомнение": 1, "внимание": 1})
             send_ep2_s12b_ignore2(chat_id)
+            return "ok", 200
         else:
             send_message(chat_id, "Выбери один из вариантов на кнопках.")
+            return "ok", 200
 
     elif current_scene == "S12b_door_break":
         if text == "✋ Резко отдёрнуть руку":
             send_ep2_s12b_ignore2(chat_id)
+            return "ok", 200
         elif text == "🚪 Открыть дверь":
             send_ep2_s12b_door_end(chat_id)
+            return "ok", 200
         else:
             send_message(chat_id, "Выбери один из вариантов на кнопках.")
+            return "ok", 200
 
     elif current_scene == "S12b_door_end":
         if text == "⬅ Попытаться отступить":
             send_ep2_s12b_door_end2(chat_id)
+            return "ok", 200
         else:
             send_message(chat_id, "Выбери один из вариантов на кнопках.")
+            return "ok", 200
 
     elif current_scene == "S12b_door_end2":
         if text == "🔁 Начать заново":
             reset_user(chat_id)
             send_s1(chat_id)
+            return "ok", 200
         else:
             send_message(chat_id, "Нажми «🔁 Начать заново».", build_keyboard([["🔁 Начать заново"]]))
+            return "ok", 200
 
     elif current_scene == "S12b_ignore2":
         if text == "💬 Ответить ему":
             apply_stats(chat_id, {"сомнение": 1, "давление": 1})
             send_ep2_s12b_ignore_talk(chat_id)
+            return "ok", 200
         elif text == "🙉 Закрыть уши и зажмуриться":
             send_ep2_s12b_ignore_end(chat_id)
+            return "ok", 200
         elif text == "🏃 Попробовать сбежать":
             send_ep2_s12b_escape_alt(chat_id)
+            return "ok", 200
         else:
             send_message(chat_id, "Выбери один из вариантов на кнопках.")
+            return "ok", 200
 
     elif current_scene == "S12b_ignore_talk":
         if text == "⚖ Попытаться доказать, что он не прав":
             apply_stats(chat_id, {"сомнение": 1, "давление": 1})
             send_ep2_s12b_ignore_prove(chat_id)
+            return "ok", 200
         elif text == "🏃 Резко развернуться и уйти":
             apply_stats(chat_id, {"сомнение": 1, "давление": 1})
             send_ep2_s12b_escape_alt(chat_id)
+            return "ok", 200
         elif text == "⬇ Замолчать и опустить взгляд":
             apply_stats(chat_id, {"сомнение": 1, "давление": 1})
             send_ep2_s12b_ignore_end(chat_id)
+            return "ok", 200
         else:
             send_message(chat_id, "Выбери один из вариантов на кнопках.")
+            return "ok", 200
 
     elif current_scene == "S12b_ignore_prove":
         if text == "💬 Продолжить объяснять":
             apply_stats(chat_id, {"сомнение": 2, "зависимость": 1, "тревожность": 1})
             send_ep2_s12b_ignore_end(chat_id)
+            return "ok", 200
         elif text == "🏃 Резко оборвать и уйти":
             apply_stats(chat_id, {"сомнение": 2, "зависимость": 1, "тревожность": 1})
             send_ep2_s12b_escape_alt(chat_id)
+            return "ok", 200
         elif text == "🚫 Сказать «это не так» и остановиться":
             apply_stats(chat_id, {"сомнение": 2, "зависимость": 1, "тревожность": 1})
             send_ep2_s12b_boundaries_alt(chat_id)
+            return "ok", 200
         else:
             send_message(chat_id, "Выбери один из вариантов на кнопках.")
+            return "ok", 200
 
     elif current_scene == "S12b_ignore_end":
         if text == "🔁 Начать заново":
             reset_user(chat_id)
             send_s1(chat_id)
+            return "ok", 200
         else:
             send_message(chat_id, "Нажми «🔁 Начать заново».", build_keyboard([["🔁 Начать заново"]]))
+            return "ok", 200
 
     elif current_scene == "S12b_escape":
         if text == "🚶 Пройти мимо и не останавливаться":
             send_ep2_s12b_loop(chat_id)
+            return "ok", 200
         elif text == "💬 Ответить ей":
             send_ep2_s12b_mother_talk(chat_id)
+            return "ok", 200
         elif text == "🗣 Объясниться":
             send_ep2_s12b_mother_talk(chat_id)
+            return "ok", 200
         elif text == "✋ Оттолкнуть её и идти дальше":
             send_ep2_s12w(chat_id)
+            return "ok", 200
         elif text == "🚫 Сказать «я не могу сейчас» и уйти":
             send_ep2_s12w(chat_id)
+            return "ok", 200
         else:
             send_message(chat_id, "Выбери один из вариантов на кнопках.")
+            return "ok", 200
 
     elif current_scene == "S12b_escape_alt":
         if text == "🚪 Открыть первую попавшуюся дверь":
             apply_stats(chat_id, {"решимость": 1, "контроль": -1})
             send_ep2_s12b_lab_random(chat_id)
+            return "ok", 200
         elif text == "🧠 Попробовать найти «правильную»":
             apply_stats(chat_id, {"решимость": -1, "тревожность": 2})
             send_ep2_s12b_lab_loop(chat_id)
+            return "ok", 200
         elif text == "➡ Просто сделать шаг вперёд, не выбирая дверь":
             apply_stats(chat_id, {"контроль": 2, "осознание": 2})
             send_ep2_s12w(chat_id)
+            return "ok", 200
         else:
             send_message(chat_id, "Выбери один из вариантов на кнопках.")
+            return "ok", 200
 
     elif current_scene == "S12b_escape_alt2":
         if text == "🚪 Выбрать любую и зайти":
             apply_stats(chat_id, {"контроль": 1, "решимость": 1, "тревожность": 1})
             send_ep2_s12b_lab_random2(chat_id)
+            return "ok", 200
         elif text == "🧠 Попробовать найти «правильную»":
             apply_stats(chat_id, {"контроль": 1, "решимость": 1, "тревожность": 1})
             send_ep2_s12b_lab_loop(chat_id)
+            return "ok", 200
         elif text == "➡ Просто сделать шаг вперёд, не выбирая дверь":
             apply_stats(chat_id, {"контроль": 1, "решимость": 1, "тревожность": 1})
             send_ep2_s12w(chat_id)
+            return "ok", 200
         else:
             send_message(chat_id, "Выбери один из вариантов на кнопках.")
+            return "ok", 200
 
     elif current_scene == "S12b_loop":
         if text == "💬 Ответить":
             apply_stats(chat_id, {"контроль": -1, "тревожность": 1})
             send_ep2_s12b_reply(chat_id)
+            return "ok", 200
         elif text == "✋ Убрать телефон":
             apply_stats(chat_id, {"контроль": -1, "тревожность": 1})
             send_ep2_s12b_throw(chat_id)
+            return "ok", 200
         elif text == "📵 Выкинуть его из рук":
             apply_stats(chat_id, {"контроль": -1, "тревожность": 1})
             send_ep2_s12b_throw(chat_id)
+            return "ok", 200
         else:
             send_message(chat_id, "Выбери один из вариантов на кнопках.")
+            return "ok", 200
 
     elif current_scene == "S12b_loop2":
         if text == "🔁 Попробовать ещё раз":
             apply_stats(chat_id, {"тревожность": 2, "зацикливание": 2})
             send_ep2_s12b_lab_loop2(chat_id)
+            return "ok", 200
         elif text == "🫳 Сдаться":
             apply_stats(chat_id, {"контроль": -3, "подавление": 2, "потеря_ориентира": 1})
             send_ep2_s12b_lab_end(chat_id)
+            return "ok", 200
         else:
             send_message(chat_id, "Выбери один из вариантов на кнопках.")
+            return "ok", 200
 
     elif current_scene == "S12b_lab_random":
         if text == "👣 Подойти ближе":
             apply_stats(chat_id, {"решимость": 1})
             send_ep2_s12b_lab_merge(chat_id)
+            return "ok", 200
         elif text == "↩ Резко отвернуться и выйти":
             apply_stats(chat_id, {"решимость": 1})
             send_ep2_s12b_escape_alt2(chat_id)
+            return "ok", 200
         elif text == "🚪 Закрыть дверь и уйти":
             apply_stats(chat_id, {"решимость": 1})
             send_ep2_s12w(chat_id)
+            return "ok", 200
         else:
             send_message(chat_id, "Выбери один из вариантов на кнопках.")
+            return "ok", 200
 
     elif current_scene == "S12b_lab_random2":
         if text == "🔁 Начать заново":
             reset_user(chat_id)
             send_s1(chat_id)
+            return "ok", 200
         else:
             send_message(chat_id, "Нажми «🔁 Начать заново».", build_keyboard([["🔁 Начать заново"]]))
+            return "ok", 200
 
     elif current_scene == "S12b_lab_loop":
         if text == "🔍 Продолжить искать":
             apply_stats(chat_id, {"тревожность": 2, "сомнение": 1})
             send_ep2_s12b_loop2(chat_id)
+            return "ok", 200
         elif text == "🎲 Просто выбрать любую":
             apply_stats(chat_id, {"тревожность": 2, "сомнение": 1})
             send_ep2_s12b_lab_choice_after_thinking(chat_id)
+            return "ok", 200
         elif text == "➡ Сделать шаг вперёд, не выбирая":
             apply_stats(chat_id, {"тревожность": 2, "сомнение": 1})
             send_ep2_s12w(chat_id)
+            return "ok", 200
         else:
             send_message(chat_id, "Выбери один из вариантов на кнопках.")
+            return "ok", 200
 
     elif current_scene == "S12b_lab_loop2":
         if text == "🚪 Начать ломать двери":
             send_ep2_s12w(chat_id)
+            return "ok", 200
         elif text == "⏸ Остановиться":
             send_ep2_s12b_lab_end(chat_id)
+            return "ok", 200
         elif text == "🙈 Закрыть глаза и просто сделать шаг":
             send_ep2_s12w(chat_id)
+            return "ok", 200
         else:
             send_message(chat_id, "Выбери один из вариантов на кнопках.")
+            return "ok", 200
 
     elif current_scene == "S12b_lab_choice_after_thinking":
         if text == "↩ Выйти обратно":
             send_ep2_s12b_escape_alt(chat_id)
+            return "ok", 200
         elif text == "🧠 Остаться и подумать ещё":
             send_ep2_s12b_loop2(chat_id)
+            return "ok", 200
         else:
             send_message(chat_id, "Выбери один из вариантов на кнопках.")
+            return "ok", 200
 
     elif current_scene == "S12b_lab_end":
         if text == "🔁 Начать заново":
             reset_user(chat_id)
             send_s1(chat_id)
+            return "ok", 200
         else:
             send_message(chat_id, "Нажми «🔁 Начать заново».", build_keyboard([["🔁 Начать заново"]]))
+            return "ok", 200
 
     elif current_scene == "S12b_lab_merge":
         if text == "🪑 Сесть рядом":
             send_ep2_s12b_lab_random2(chat_id)
+            return "ok", 200
         elif text == "↩ Резко отступить и выйти":
             send_ep2_s12b_escape_alt2(chat_id)
+            return "ok", 200
         else:
             send_message(chat_id, "Выбери один из вариантов на кнопках.")
+            return "ok", 200
 
     elif current_scene == "S12b_mother_talk":
         if text == "💔 Прости, мам, но сейчас мне надо позаботиться о себе":
             send_ep2_s12w(chat_id)
+            return "ok", 200
         elif text == "🗣 Попытаться объясниться":
             send_ep2_s12b_mother_breakdown(chat_id)
+            return "ok", 200
         elif text == "↩ Отвернуться и уйти":
             send_ep2_s12b_loop(chat_id)
+            return "ok", 200
         else:
             send_message(chat_id, "Выбери один из вариантов на кнопках.")
+            return "ok", 200
 
     elif current_scene == "S12b_mother_breakdown":
         if text == "🔁 Начать заново":
             reset_user(chat_id)
             send_s1(chat_id)
+            return "ok", 200
         else:
             send_message(chat_id, "Нажми «🔁 Начать заново».", build_keyboard([["🔁 Начать заново"]]))
+            return "ok", 200
 
     elif current_scene == "S12w":
         if text in ["😮 Можно выдохнуть", "🧠 Я не повторю это вновь", "🚪 Нужно срочно выйти", "❄ Это было слишком легко"]:
             send_ep2_s13(chat_id)
+            return "ok", 200
         else:
             send_message(chat_id, "Выбери один из вариантов на кнопках.")
+            return "ok", 200
 
     elif current_scene == "S13":
         if text == "🤲 Попытаться разбудить Крис":
             apply_stats(chat_id, {"решимость": 2, "ответственность": 1})
             send_ep2_s14(chat_id)
+            return "ok", 200
         elif text == "⏳ Подождать":
             apply_stats(chat_id, {"сомнение": 1})
             send_ep2_s14(chat_id)
+            return "ok", 200
         elif text == "↩ Отвернуться":
             apply_stats(chat_id, {"эмпатия": -1, "защита": 1})
             send_ep2_s14(chat_id)
+            return "ok", 200
         elif text == "🗣 Сказать кому-то из них сделать это":
             apply_stats(chat_id, {"контроль": -1, "зависимость": 1})
             send_ep2_s14(chat_id)
+            return "ok", 200
         else:
             send_message(chat_id, "Выбери один из вариантов на кнопках.")
+            return "ok", 200
 
     elif current_scene == "S14":
         if text == "🙂 Сделать вид, что всё в порядке":
             apply_stats(chat_id, {"контроль": 1, "открытость": -1})
             send_ep2_s15(chat_id)
+            return "ok", 200
         elif text == "🤍 Остаться рядом с Крис":
             apply_stats(chat_id, {"эмпатия": 2, "связь_Крис": 1})
             send_ep2_s15(chat_id)
+            return "ok", 200
         elif text == "🔒 Отстраниться и замолчать":
             apply_stats(chat_id, {"защита": 1, "доверие": -1})
             send_ep2_s15(chat_id)
+            return "ok", 200
         elif text == "👁 Сосредоточиться на том, чтобы идти дальше":
             apply_stats(chat_id, {"восприятие": 2, "внимание": 1})
             send_ep2_s15(chat_id)
+            return "ok", 200
         else:
             send_message(chat_id, "Выбери один из вариантов на кнопках.")
+            return "ok", 200
 
     elif current_scene == "S15":
         if text == "🧊 Сохранять спокойствие":
             apply_stats(chat_id, {"контроль": 1, "открытость": -1})
             send_ep2_s16(chat_id)
+            return "ok", 200
         elif text == "🤍 Остаться рядом с Крис":
             apply_stats(chat_id, {"эмпатия": 1, "связь_Крис": 1})
             send_ep2_s16(chat_id)
+            return "ok", 200
         elif text == "🙏 Попросить поддержки у ребят":
             apply_stats(chat_id, {"доверие": 1, "самостоятельность": -1})
             send_ep2_s16(chat_id)
+            return "ok", 200
         elif text == "👁 Осмотреться перед тем как идти":
             apply_stats(chat_id, {"восприятие": 1, "внимание": 1})
             send_ep2_s16(chat_id)
+            return "ok", 200
         else:
             send_message(chat_id, "Выбери один из вариантов на кнопках.")
+            return "ok", 200
 
     elif current_scene == "S16":
         if text == "🚶 Пойти на звук":
             apply_stats(chat_id, {"решимость": 1, "осторожность": -1})
             send_ep2_s17(chat_id)
+            return "ok", 200
         elif text == "🛡 Остаться с остальными":
             apply_stats(chat_id, {"защита": 1, "инициативность": -1})
             send_ep2_s17(chat_id)
+            return "ok", 200
         elif text == "👂 Остановиться и прислушаться":
             apply_stats(chat_id, {"внимание": 1, "восприятие": 1})
             send_ep2_s17(chat_id)
+            return "ok", 200
         elif text == "❓ Спросить, что происходит":
             apply_stats(chat_id, {"доверие": 1, "связь_Крис": 1})
             send_ep2_s17(chat_id)
+            return "ok", 200
         else:
             send_message(chat_id, "Выбери один из вариантов на кнопках.")
+            return "ok", 200
 
     elif current_scene == "S17":
         if text in ["🚪 Подойти ближе", "🧊 Остановиться", "✋ Попытаться остановить других", "👊 Постучать в ответ"]:
             send_ep2_s18(chat_id)
+            return "ok", 200
         else:
             send_message(chat_id, "Выбери один из вариантов на кнопках.")
+            return "ok", 200
 
     elif current_scene == "S18":
         if text in ["🔓 Открыть дверь", "🚫 Не трогать дверь", "💬 Поговорить с ней", "✋ Остановить всех"]:
             send_ep2_s19(chat_id)
+            return "ok", 200
         else:
             send_message(chat_id, "Выбери один из вариантов на кнопках.")
+            return "ok", 200
 
     elif current_scene == "S19":
         if text == "⚠ Открыть дверь несмотря ни на что":
             send_ep2_s20a(chat_id)
+            return "ok", 200
         elif text in ["⏳ Дождаться другой двери", "❤️ Поддержать Крис", "🛑 Попробовать остановить всех"]:
             send_ep2_s20b(chat_id)
+            return "ok", 200
         else:
             send_message(chat_id, "Выбери один из вариантов на кнопках.")
+            return "ok", 200
 
     elif current_scene == "S20a":
         if text == "▶ Серия 3 скоро":
             send_message(chat_id, "Серия 3 скоро появится здесь.", build_keyboard([["🔁 Начать заново"]]))
+            return "ok", 200
         else:
             send_message(chat_id, "Выбери один из вариантов на кнопках.")
+            return "ok", 200
 
     elif current_scene == "S20b":
         if text == "▶ Серия 3 скоро":
             send_message(chat_id, "Серия 3 скоро появится здесь.", build_keyboard([["🔁 Начать заново"]]))
+            return "ok", 200
         else:
             send_message(chat_id, "Выбери один из вариантов на кнопках.")
+            return "ok", 200
 
     else:
         send_message(chat_id, f"Неизвестная сцена: {current_scene}. Напиши /start")
         return "ok", 200
-
-
-if __name__ == "__main__":
-    if not TOKEN:
-        raise ValueError("TOKEN не найден. Добавь TOKEN в переменные окружения.")
-
-    port = int(os.environ.get("PORT", 10000))
-    app.run(host="0.0.0.0", port=port)
