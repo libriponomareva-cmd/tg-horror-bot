@@ -10305,6 +10305,14 @@ def webhook():
             send_message(chat_id, "Выбери один из вариантов на кнопках.")
             return "ok", 200
 
-    else:
+   else:
         send_message(chat_id, f"Неизвестная сцена: {current_scene}. Напиши /start")
         return "ok", 200
+
+
+if __name__ == "__main__":
+    if not TOKEN:
+        raise ValueError("TOKEN не найден. Добавь TOKEN в переменные окружения.")
+
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host="0.0.0.0", port=port)
