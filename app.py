@@ -8850,7 +8850,7 @@ def send_ep2_s12(chat_id, variant=None):
     send_scene(
         chat_id,
         "S12",
-        get_ep2_s12_text(chat_id, variant),
+        get_ep2_s12_text(variant),
         ["🪑 Сесть и отдохнуть", "👁 Осмотреться", "🍽 Набраться сил", "🚶 Идти дальше"],
         image="s12.jpg"
     )
@@ -8860,7 +8860,7 @@ def send_ep2_s12a(chat_id, variant=None):
     send_scene(
         chat_id,
         "S12A",
-        get_ep2_s12a_text(chat_id, variant),
+        get_ep2_s12a_text(),
         ["😏 Подойти к Стиву", "🛡 Подойти к Рею", "🔥 Подойти к Крис", "💤 Остаться и лечь спать"],
         image="s12a.jpg"
     )
