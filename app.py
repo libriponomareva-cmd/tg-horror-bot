@@ -2783,7 +2783,7 @@ def get_ep2_s11_text(chat_id):
 
 Рей молчит."""
 
-    return f"""# S11 — Она не одна
+    return f"""
 
 Шаг.
 
@@ -3309,7 +3309,7 @@ def get_ep2_s12_text(variant=None):
 
 
 def get_ep2_s12a_text():
-    return """# S12a — Отдых
+    return """
 
 Ты всё-таки останавливаешься.
 
@@ -3438,7 +3438,7 @@ def get_ep2_s12a_text():
 Как будто следит."""
 
 def get_ep2_s12a_steve_text():
-    return """# S12a — Стив
+    return """
 
 Ты поднимаешься.
 
@@ -3610,7 +3610,7 @@ def get_ep2_s12a_steve_text():
 
 
 def get_ep2_s12a_rey_text():
-    return """# S12a — Рей
+    return """
 
 Ты поднимаешься.
 
@@ -3770,7 +3770,7 @@ def get_ep2_s12a_rey_text():
 
 
 def get_ep2_s12a_kris_text():
-    return """# S12a — Крис
+    return """
 
 Ты поднимаешься.
 
@@ -3938,7 +3938,7 @@ def get_ep2_s12a_kris_text():
 
 
 def get_ep2_s12c_text():
-    return """# S12c — Не одна
+    return """
 
 Ты смотришь на того, с кем стала намного ближе.
 
@@ -3956,12 +3956,9 @@ def get_ep2_s12c_text():
 
 
 def get_ep2_s12d_text():
-    return """# S12d — Вместе
+    return """
 
 Ты не уходишь.
-
-…
-
 Остаёшься.
 
 …
@@ -4064,7 +4061,7 @@ def get_ep2_s12d_text():
 
 
 def get_ep2_s12b_text():
-    return """# S12b — Сон
+    return """Вы не достаточно близки, поэтому..
 
 Ты остаёшься одна.
 
@@ -4198,7 +4195,7 @@ def get_ep2_s12b_text():
 
 
 def get_ep2_s12b_see_text():
-    return """# S12b — Осмотреться
+    return """
 
 Ты не берёшь телефон.
 
@@ -4342,7 +4339,7 @@ def get_ep2_s12b_see_text():
 
 
 def get_ep2_s12b_take_text():
-    return """# S12b — Ответить
+    return """
 
 Ты смотришь на экран.
 
@@ -4454,7 +4451,7 @@ def get_ep2_s12b_take_text():
 
 
 def get_ep2_s12b_reply_text():
-    return """# S12b — Ответ
+    return """
 
 Ты не отводишь взгляд.
 
@@ -4588,9 +4585,7 @@ def get_ep2_s12b_reply_text():
 
 
 def get_ep2_s12b2_text():
-    return """# S12b — Затягивание
-
-Ты быстро печатаешь.
+    return """Ты быстро печатаешь.
 
 …
 
@@ -4737,7 +4732,7 @@ def get_ep2_s12b2_text():
 
 
 def get_ep2_s12b2_wait_text():
-    return """# S12b — Дождаться помощи
+    return """
 
 Ты замираешь.
 
@@ -4898,7 +4893,7 @@ def get_ep2_s12b2_wait_text():
 
 
 def get_ep2_s12b_boundaries_text():
-    return """# S12b — Границы
+    return """
 
 Ты смотришь на экран.
 
@@ -4984,7 +4979,7 @@ def get_ep2_s12b_boundaries_text():
 
 
 def get_ep2_s12b_boundaries_alt_text():
-    return """# S12b — Это не так
+    return """
 
 Ты резко выдыхаешь.
 
@@ -5092,7 +5087,7 @@ def get_ep2_s12b_boundaries_alt_text():
 
 
 def get_ep2_s12b_throw_text():
-    return """# S12b — Разрыв
+    return """
 
 Телефон выскальзывает из руки.
 
@@ -5222,7 +5217,7 @@ def get_ep2_s12b_throw_text():
 
 
 def get_ep2_s12b_door_text():
-    return """# S12b — Подойти к двери
+    return """
 
 Ты делаешь шаг.
 
@@ -5290,7 +5285,7 @@ def get_ep2_s12b_door_text():
 
 
 def get_ep2_s12b_open_talk_text():
-    return """# S12b — Кто там
+    return """
 
 Ты не трогаешь дверь.
 
@@ -5378,7 +5373,7 @@ def get_ep2_s12b_open_talk_text():
 
 
 def get_ep2_s12b_door_break_text():
-    return """# S12b — Почти
+    return """
 
 Ты поднимаешь руку.
 
@@ -5474,7 +5469,7 @@ def get_ep2_s12b_door_break_text():
 
 
 def get_ep2_s12b_door_end_text():
-    return """# S12b — За порогом
+    return """
 
 Щель становится шире.
 
@@ -5563,7 +5558,7 @@ def get_ep2_s12b_door_end2_text():
 
 
 def get_ep2_s12b_ignore2_text():
-    return """# S12b — Игнор
+    return """
 
 Ты не двигаешься.
 
@@ -5713,7 +5708,7 @@ def get_ep2_s12b_ignore2_text():
 
 
 def get_ep2_s12b_ignore_talk_text():
-    return """# S12b — Ответить
+    return """
 
 Ты не выдерживаешь.
 
@@ -5771,7 +5766,7 @@ def get_ep2_s12b_ignore_talk_text():
 
 
 def get_ep2_s12b_ignore_prove_text():
-    return """# S12b — Доказать
+    return """
 
 Ты делаешь вдох.
 
@@ -5925,7 +5920,7 @@ def get_ep2_s12b_ignore_prove_text():
 
 
 def get_ep2_s12b_ignore_end_text():
-    return """# S12b — Продолжить
+    return """
 
 — Я просто…
 
@@ -6033,7 +6028,7 @@ def get_ep2_s12b_ignore_end_text():
 
 
 def get_ep2_s12b_escape_text():
-    return """# S12b — Бежать
+    return """
 
 Ты разворачиваешься.
 
@@ -6165,7 +6160,7 @@ def get_ep2_s12b_escape_text():
 
 
 def get_ep2_s12b_escape_alt_text():
-    return """# S12b — Лабиринт
+    return """
 
 Ты разворачиваешься.
 
@@ -6235,7 +6230,7 @@ def get_ep2_s12b_escape_alt_text():
 
 
 def get_ep2_s12b_escape_alt2_text():
-    return """# S12b — Назад
+    return """
 
 Ты резко отступаешь.
 
@@ -6289,7 +6284,7 @@ def get_ep2_s12b_escape_alt2_text():
 
 
 def get_ep2_s12b_loop_text():
-    return """# S12b — Сбой
+    return """
 
 Ты делаешь шаг в сторону.
 
@@ -6387,7 +6382,7 @@ def get_ep2_s12b_loop_text():
 
 
 def get_ep2_s12b_loop2_text():
-    return """# S12b — Ещё раз
+    return """
 
 Ты не выходишь.
 
@@ -6485,7 +6480,7 @@ def get_ep2_s12b_loop2_text():
 
 
 def get_ep2_s12b_lab_random_text():
-    return """# S12b — Любая дверь
+    return """
 
 Комната.
 
@@ -6561,7 +6556,7 @@ def get_ep2_s12b_lab_random_text():
 
 
 def get_ep2_s12b_lab_random2_text():
-    return """# S12b — Занять место
+    return """
 
 Ты выбираешь дверь.
 
@@ -6742,7 +6737,7 @@ def get_ep2_s12b_lab_random2_text():
 
 
 def get_ep2_s12b_lab_loop_text():
-    return """# S12b — Найти правильную
+    return """
 
 Ты не двигаешься.
 
@@ -6852,7 +6847,7 @@ def get_ep2_s12b_lab_loop_text():
 
 
 def get_ep2_s12b_lab_loop2_text():
-    return """# S12b — Ещё дальше в цикл
+    return """
 
 Ты возвращаешься в коридор.
 
@@ -6876,7 +6871,7 @@ def get_ep2_s12b_lab_loop2_text():
 
 
 def get_ep2_s12b_lab_choice_after_thinking_text():
-    return """# S12b — Поздний выбор
+    return """
 
 Ты останавливаешься.
 
@@ -6948,7 +6943,7 @@ def get_ep2_s12b_lab_choice_after_thinking_text():
 
 
 def get_ep2_s12b_lab_end_text():
-    return """# S12b — Остаться
+    return """
 
 Ты не двигаешься.
 
@@ -7007,7 +7002,7 @@ def get_ep2_s12b_lab_end_text():
 
 
 def get_ep2_s12b_lab_merge_text():
-    return """# S12b — Ближе
+    return """
 
 Ты делаешь шаг.
 
@@ -7122,7 +7117,7 @@ def get_ep2_s12b_lab_merge_text():
 
 
 def get_ep2_s12b_mother_talk_text():
-    return """# S12b — Мать
+    return """
 
 Ты останавливаешься.
 
@@ -7286,7 +7281,7 @@ def get_ep2_s12b_mother_talk_text():
 
 
 def get_ep2_s12b_mother_breakdown_text():
-    return """# S12b — Объясниться
+    return """
 
 Ты делаешь вдох.
 
@@ -7543,7 +7538,7 @@ def get_ep2_s12b_mother_breakdown_text():
 
 
 def get_ep2_s12w_text():
-    return """# S12 — Выход
+    return """
 
 Ты не отступаешь.
 
@@ -7643,7 +7638,7 @@ def get_ep2_s12w_text():
 
 
 def get_ep2_s13_text():
-    return """# S13 — Тишина
+    return """Тишина..
 
 Поезд идёт.
 
@@ -7718,7 +7713,7 @@ def get_ep2_s13_text():
 Как будто ждёт."""
 
 def get_ep2_s14_text():
-    return """# S14 — Разбудить
+    return """
 
 Ты уже рядом с ней.
 
@@ -7766,7 +7761,7 @@ def get_ep2_s14_text():
 
 
 def get_ep2_s15_text():
-    return """# S15 — Дальше
+    return """
 
 Ты выпрямляешься.
 
@@ -7856,7 +7851,7 @@ def get_ep2_s16_text(chat_id):
     if extra_text:
         extra_text = "\n\n" + extra_text
 
-    return f"""# S16 — Следующий вагон
+    return f"""
 
 Ты делаешь шаг.
 
@@ -7972,7 +7967,7 @@ def get_ep2_s17_text(chat_id):
     if extra_text:
         extra_text = "\n\n" + extra_text
 
-    return f"""# S17 — Звук
+    return f"""
 
 Ты не ждёшь.
 
@@ -8082,7 +8077,7 @@ def get_ep2_s18_text(chat_id):
     if extra_text:
         extra_text = "\n\n" + extra_text
 
-    return f"""# S18 — За дверью
+    return f"""
 
 Ты делаешь шаг ближе.
 
@@ -8195,7 +8190,7 @@ def get_ep2_s19_text(chat_id):
     if extra_text:
         extra_text = "\n\n" + extra_text
 
-    return f"""# S19 — Перед выбором
+    return f"""
 
 Ты тянешься к двери.
 
@@ -8348,7 +8343,7 @@ def get_ep2_s20a_text(chat_id):
 
 И открывает её сама."""
 
-    return f"""# S20a — Дверь
+    return f"""
 
 Ты делаешь шаг.
 
@@ -8396,7 +8391,7 @@ def get_ep2_s20a_text(chat_id):
 
 
 def get_ep2_s20b_text():
-    return """# S20 — Дверь
+    return """
 
 Ты не двигаешься.
 
