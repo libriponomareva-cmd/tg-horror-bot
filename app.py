@@ -9520,7 +9520,7 @@ def webhook():
     # Серия 2
     # =========================
 
-    elif current_scene == "S11":
+elif current_scene == "S11":
     if text == "😶 Промолчать":
         apply_stats(chat_id, {"контроль": 1, "связь_Рей": 1, "связь_Крис": -1})
         send_ep2_s12(chat_id, variant="silent")
