@@ -10305,7 +10305,7 @@ def webhook():
             send_message(chat_id, "Выбери один из вариантов на кнопках.")
             return "ok", 200
 
-   else:
+    else:
         send_message(chat_id, f"Неизвестная сцена: {current_scene}. Напиши /start")
         return "ok", 200
 
