@@ -9274,7 +9274,7 @@ def send_ep2_s16(chat_id):
     send_scene(
         chat_id,
         "S16",
-        get_ep2_s16_text(),
+        get_ep2_s16_text(chat_id),
         ["🚶 Пойти на звук", "🛡 Остаться с остальными", "👂 Остановиться и прислушаться", "❓ Спросить, что происходит"],
         image="s16.jpg"
     )
@@ -9284,7 +9284,7 @@ def send_ep2_s17(chat_id):
     send_scene(
         chat_id,
         "S17",
-        get_ep2_s17_text(),
+        get_ep2_s17_text(chat_id),
         ["🚪 Подойти ближе", "🧊 Остановиться", "✋ Попытаться остановить других", "👊 Постучать в ответ"],
         image="s17.jpg"
     )
@@ -9294,7 +9294,7 @@ def send_ep2_s18(chat_id):
     send_scene(
         chat_id,
         "S18",
-        get_ep2_s18_text(),
+        get_ep2_s18_text(chat_id),
         ["🔓 Открыть дверь", "🚫 Не трогать дверь", "💬 Поговорить с ней", "✋ Остановить всех"],
         image="s18.jpg"
     )
@@ -9304,7 +9304,7 @@ def send_ep2_s19(chat_id):
     send_scene(
         chat_id,
         "S19",
-        get_ep2_s19_text(),
+        get_ep2_s19_text(chat_id),
         ["⚠ Открыть дверь несмотря ни на что", "⏳ Дождаться другой двери", "❤️ Поддержать Крис", "🛑 Попробовать остановить всех"],
         image="s19.jpg"
     )
@@ -9314,11 +9314,10 @@ def send_ep2_s20a(chat_id):
     send_scene(
         chat_id,
         "S20a",
-        get_ep2_s20a_text(),
+        get_ep2_s20a_text(chat_id),
         ["▶ Серия 3 скоро"],
         image="s20a.jpg"
     )
-
 
 def send_ep2_s20b(chat_id):
     send_scene(
