@@ -257,31 +257,6 @@ def send_local_photo(chat_id, image_filename: str, caption: str = None, keyboard
             files={"photo": photo}
         )
 
-    if not os.path.exists(image_path):
-        print(f"[IMAGE NOT FOUND] {image_path}")
-        send_message(chat_id, f"⚠ Не найдено изображение: {image_filename}", keyboard=keyboard)
-        return
-
-    data = {"chat_id": chat_id}
-
-    if caption:
-        data["caption"] = caption
-
-    if keyboard:
-        data["reply_markup"] = json.dumps({
-            "keyboard": keyboard,
-            "resize_keyboard": True,
-            "one_time_keyboard": False
-        }, ensure_ascii=False)
-
-    with open(image_path, "rb") as photo:
-        safe_post(
-            f"{URL}/sendPhoto",
-            data=data,
-            files={"photo": photo}
-        )
-
-
 def send_typing(chat_id) -> None:
     if not TOKEN:
         print("[ERROR] TOKEN не задан")
@@ -309,6 +284,13 @@ def send_scene(chat_id, scene_key: str, text: str, buttons: list, image: str = N
 # =========================
 # Тексты
 # =========================
+def get_start_menu_text():
+    return """Добро пожаловать.
+
+Выбери, с чего начать:
+
+1 серия — начало истории
+2 серия — продолжение"""
 
 def get_s1_text():
     return """Ты просыпаешься резко.
@@ -8488,6 +8470,14 @@ def get_ep2_s20b_text():
 
 → Серия 3."""
     
+def send_start_menu(chat_id):
+    send_scene(
+        chat_id,
+        "START_MENU",
+        get_start_menu_text(),
+        ["1️⃣ Первая серия", "2️⃣ Вторая серия"],
+        image=None
+    )    
 
 def send_s1(chat_id):
     send_scene(
@@ -9375,14 +9365,21 @@ def webhook():
     current_scene = user["scene"]
 
     if text == "/start" or text == "🔁 Начать заново":
-        reset_user(chat_id)
-        send_s1(chat_id)
-        return "ok", 200
+    reset_user(chat_id)
+    send_start_menu(chat_id)
+    return "ok", 200
 
     # =========================
     # Серия 1
     # =========================
-
+    if current_scene == "START_MENU":
+        if text == "1️⃣ Первая серия":
+            send_s1(chat_id)
+        elif text == "2️⃣ Вторая серия":
+            send_ep2_s11(chat_id)
+        else:
+            send_message(chat_id, "Выбери один из вариантов на кнопках.")
+            
     if current_scene == "S1":
         if text == "❓ Кто ты такой?":
             apply_stats(chat_id, {"решимость": 1, "Стив": 1})
