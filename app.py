@@ -9519,60 +9519,57 @@ def webhook():
     # =========================
     # Серия 2
     # =========================
+    elif current_scene == "S11":
+        if text == "😶 Промолчать":
+            apply_stats(chat_id, {"контроль": 1, "связь_Рей": 1, "связь_Крис": -1})
+            send_ep2_s12(chat_id, variant="silent")
 
-elif current_scene == "S11":
-    if text == "😶 Промолчать":
-        apply_stats(chat_id, {"контроль": 1, "связь_Рей": 1, "связь_Крис": -1})
-        send_ep2_s12(chat_id, variant="silent")
+        elif text == "💬 Ответить Крис":
+            apply_stats(chat_id, {"решимость": 1, "связь_Стив": 1})
+            send_ep2_s12(chat_id, variant="answer_kris")
 
-    elif text == "💬 Ответить Крис":
-        apply_stats(chat_id, {"решимость": 1, "связь_Стив": 1})
-        send_ep2_s12(chat_id, variant="answer_kris")
+        elif text == "🛡 Обратиться к Рею":
+            apply_stats(chat_id, {"контроль": 1, "связь_Рей": 2})
+            send_ep2_s12(chat_id, variant="rey")
 
-    elif text == "🛡 Обратиться к Рею":
-        apply_stats(chat_id, {"контроль": 1, "связь_Рей": 2})
-        send_ep2_s12(chat_id, variant="rey")
+        elif text == "❤️ Поддержать Стива":
+            apply_stats(chat_id, {"связь_Стив": 2, "контроль": 1, "связь_Крис": -1})
+            send_ep2_s12(chat_id, variant="steve")
 
-    elif text == "❤️ Поддержать Стива":
-        apply_stats(chat_id, {"связь_Стив": 2, "контроль": 1, "связь_Крис": -1})
-        send_ep2_s12(chat_id, variant="steve")
+        else:
+            send_message(chat_id, "Выбери один из вариантов на кнопках.")
 
-    else:
-        send_message(chat_id, "Выбери один из вариантов на кнопках.")
+    elif current_scene == "S12":
+        if text == "🪑 Сесть и отдохнуть":
+            send_ep2_s12a(chat_id, variant="rest")
 
+        elif text == "👁 Осмотреться":
+            send_ep2_s12a(chat_id, variant="look")
 
-elif current_scene == "S12":
-    if text == "🪑 Сесть и отдохнуть":
-        send_ep2_s12a(chat_id, variant="rest")
+        elif text == "🍽 Набраться сил":
+            send_ep2_s12a(chat_id, variant="food")
 
-    elif text == "👁 Осмотреться":
-        send_ep2_s12a(chat_id, variant="look")
+        elif text == "🚶 Идти дальше":
+            send_ep2_s13(chat_id)
 
-    elif text == "🍽 Набраться сил":
-        send_ep2_s12a(chat_id, variant="food")
+        else:
+            send_message(chat_id, "Выбери один из вариантов на кнопках.")
 
-    elif text == "🚶 Идти дальше":
-        send_ep2_s13(chat_id)
+    elif current_scene == "S12A":
+        if text == "😏 Подойти к Стиву":
+            send_ep2_s12a_steve(chat_id)
 
-    else:
-        send_message(chat_id, "Выбери один из вариантов на кнопках.")
+        elif text == "🛡 Подойти к Рею":
+            send_ep2_s12a_rey(chat_id)
 
+        elif text == "🔥 Подойти к Крис":
+            send_ep2_s12a_kris(chat_id)
 
-elif current_scene == "S12A":
-    if text == "😏 Подойти к Стиву":
-        send_ep2_s12a_steve(chat_id)
+        elif text == "💤 Остаться и лечь спать":
+            send_ep2_s12b(chat_id)
 
-    elif text == "🛡 Подойти к Рею":
-        send_ep2_s12a_rey(chat_id)
-
-    elif text == "🔥 Подойти к Крис":
-        send_ep2_s12a_kris(chat_id)
-
-    elif text == "💤 Остаться и лечь спать":
-        send_ep2_s12b(chat_id)
-
-    else:
-        send_message(chat_id, "Выбери один из вариантов на кнопках.")
+        else:
+            send_message(chat_id, "Выбери один из вариантов на кнопках.")
 
     elif current_scene == "S12a_Steve":
         if text == "💤 Пойти отдохнуть":
