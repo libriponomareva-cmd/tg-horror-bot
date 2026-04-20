@@ -220,7 +220,42 @@ def send_local_photo(chat_id, image_filename: str, caption: str = None, keyboard
         print("[ERROR] TOKEN не задан")
         return
 
-    image_path = os.path.join("images", image_filename)
+    base_name = os.path.splitext(image_filename)[0]
+
+    possible_paths = [
+        os.path.join("images", base_name + ".jpg"),
+        os.path.join("images", base_name + ".png"),
+    ]
+
+    image_path = None
+    for path in possible_paths:
+        if os.path.exists(path):
+            image_path = path
+            break
+
+    if not image_path:
+        print(f"[IMAGE NOT FOUND] {image_filename}")
+        send_message(chat_id, f"⚠ Не найдено изображение: {image_filename}", keyboard=keyboard)
+        return
+
+    data = {"chat_id": chat_id}
+
+    if caption:
+        data["caption"] = caption
+
+    if keyboard:
+        data["reply_markup"] = json.dumps({
+            "keyboard": keyboard,
+            "resize_keyboard": True,
+            "one_time_keyboard": False
+        }, ensure_ascii=False)
+
+    with open(image_path, "rb") as photo:
+        safe_post(
+            f"{URL}/sendPhoto",
+            data=data,
+            files={"photo": photo}
+        )
 
     if not os.path.exists(image_path):
         print(f"[IMAGE NOT FOUND] {image_path}")
